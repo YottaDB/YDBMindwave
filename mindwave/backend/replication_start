@@ -1,0 +1,5 @@
+#!/bin/bash
+$ydb_dist/mupip set -replication=on -region "DEFAULT"
+$ydb_dist/mupip set -journal=disable -region "INBOUND"
+$ydb_dist/mupip replicate -instance_create
+$ydb_dist/mupip replicate -source -start -instsecondary=web -secondary=127.0.0.1:3000 -buffsize=1048576 -log=$ydb_tmp/mwToWeb-source.log

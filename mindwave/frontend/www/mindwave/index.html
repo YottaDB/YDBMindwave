@@ -1,0 +1,404 @@
+<!--
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * -->
+
+<html>
+    <head>
+        <title>YottaDB MindWave IoT Demo</title>
+        <script src="http://d3js.org/d3.v2.js"></script>
+        <!-- 
+            using JQuery for element dimensions
+            This is a small aspect of this example so it can be removed fairly easily if needed.
+        -->
+        <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.21.0/moment.min.js"></script>
+        <script src="sample_data.js"></script>
+        <script src="line-graph2.js"></script>
+        <link rel="stylesheet" href="style.css" type="text/css">
+        <style>
+            body {
+                font-family: "Helvetica Neue", Helvetica;
+            }
+                    
+            p {
+                clear:both;
+                top: 20px;
+            }       
+                    
+            div.aGraph {
+                margin-bottom: 30px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="eegGraph" class="aGraph" style="position:relative;width:100%;height:300px"></div>
+        <div id="eegAlpha" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+        <div id="eegBeta" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+        <div id="eegGamma" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+        <div id="eegTheta" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+        <div id="eegDelta" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+        <div id="attentionMeditation" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+
+        <script>
+            /*
+             * Note how the 'data' object is added to here before rendering to provide decoration information.
+             * <p>
+             * This is purposefully done here instead of in data.js as an example of how data would come from a server
+             * and then have presentation information injected into it (rather than as separate arguments in another object)
+             * and passed into LineGraph.
+             *
+             * Also, CSS can be used to style colors etc, but this is also doable via the 'data' object so that the styling
+             * of different data points can be done in code which is often more natural for display names, legends, line colors etc
+            */
+            // message mindwave data to be compatible:
+            var eegData,alphaData,betaData,gammaData,thetaData,deltaData,attentionData,meditationData,attentionMeditationData, totalItems, prevTotalItems, skippedIterations;
+
+            totalItems = 0;
+            prevTotalItems = 0;
+            skippedIterations = 0;
+
+            var resetMindWaveData = function() {
+                eegData={
+                  start: 9999999999999,
+                  end: 0,
+                  step: 10000,
+                  names: ["hiAlpha","loAlpha","hiBeta","loBeta","midGamma","loGamma","theta","delta"],
+                  displayNames: ["hiAlpha","loAlpha","hiBeta","loBeta","midGamma","loGamma","theta","delta"],
+                  colors: ["green","orange","red","darkred","#000000","#ff00ff","#2863bc","#c8801c"],
+                  axis: ["left","left","left","left","left","left","left","right"],
+                  times: [],
+                  values: [[],[],[],[],[],[],[],[]]
+                };
+                alphaData={
+                  start: 9999999999999,
+                  end: 0,
+                  step: 1000,
+                  names: ["hiAlpha","loAlpha"],
+                  displayNames: ["hiAlpha","loAlpha"],
+                  colors: ["green","orange"],
+                  times: [],
+                  values: [[],[]]
+                };
+                betaData={
+                  start: 9999999999999,
+                  end: 0,
+                  step: 1000,
+                  names: ["hiBeta","loBeta"],
+                  displayNames: ["hiBeta","loBeta"],
+                  colors: ["red","darkred"],
+                  times:[],
+                  values:[[],[]]
+                };
+                gammaData={
+                  start: 9999999999999,
+                  end: 0,
+                  step: 1000,
+                  names: ["midGamma","loGamma"],
+                  displayNames: ["midGamma","loGamma"],
+                  colors: ["#000000","#ff00ff"],
+                  times:[],
+                  values:[[],[]]
+                };
+                thetaData={
+                  start: 9999999999999,
+                  end: 0,
+                  step: 1000,
+                  names: ["theta"],
+                  displayNames: ["theta"],
+                  colors: ["#2863bc"],
+                  times:[],
+                  values:[[]]
+                };
+                deltaData={
+                  start: 9999999999999,
+                  end: 0,
+                  step: 1000,
+                  names: ["delta"],
+                  displayNames: ["delta"],
+                  colors: ["#c8801c"],
+                  times:[],
+                  values:[[]]
+                };
+                attentionData={
+                  start: 9999999999999,
+                  end: 0,
+                  step: 1000,
+                  names: ["attention"],
+                  displayNames: ["attention"],
+                  colors: ["green","orange"],
+                  times:[],
+                  values:[[]]
+                };
+                meditationData={
+                  start: 9999999999999,
+                  end: 0,
+                  step: 1000,
+                  names: ["meditation"],
+                  displayNames: ["meditation"],
+                  colors: ["green","orange"],
+                  times:[],
+                  values:[[]]
+                };
+                attentionMeditationData={
+                  start: 9999999999999,
+                  end: 0,
+                  step: 1000,
+                  names: ["attention","meditation"],
+                  displayNames: ["attention","meditation"],
+                  colors: ["#2863bc","#c8801c"],
+                  times:[],
+                  values:[[],[]]
+                };
+            };
+
+            var parseMindWaveData = function(mwData) {
+                _.each(mwData, function(item,date) {
+                  var attention,meditation,delta,hiAlpha,loAlpha,hiBeta,loBeta,midGamma,loGamma,delta,theta,epochDate;
+                  if(date === "metadata") {
+                    totalItems = item.TotalItems;
+                    return;
+                  }
+                  _.each(item, function(rawData, type) {
+                    switch(type) {
+                      case "attention":
+                        attention=rawData;
+                        if (date.length===21) {
+                            epochDate=moment(date.substring(0,18) + "Z","YYYYMMDDHHmmss.SSSZ").valueOf();    
+                        }
+                        else {
+                            epochDate=parseInt(date);
+                        }            
+                        break;
+                      case "meditation":
+                        meditation=rawData;
+                        if (date.length===21) {
+                            epochDate=moment(date.substring(0,18) + "Z","YYYYMMDDHHmmss.SSSZ").valueOf();    
+                        }
+                        else {
+                            epochDate=parseInt(date);
+                        }   
+                        break;
+                      case "delta":
+                        delta=rawData;
+                        if (date.length===21) {
+                            epochDate=moment(date.substring(0,18) + "Z","YYYYMMDDHHmmss.SSSZ").valueOf();    
+                        }
+                        else {
+                            epochDate=parseInt(date);
+                        }   
+                        break;
+                      case "hiAlpha":
+                        hiAlpha=rawData;
+                        if (date.length===21) {
+                            epochDate=moment(date.substring(0,18) + "Z","YYYYMMDDHHmmss.SSSZ").valueOf();    
+                        }
+                        else {
+                            epochDate=parseInt(date);
+                        }   
+                        break;
+                      case "hiBeta":
+                        hiBeta=rawData;
+                        if (date.length===21) {
+                            epochDate=moment(date.substring(0,18) + "Z","YYYYMMDDHHmmss.SSSZ").valueOf();    
+                        }
+                        else {
+                            epochDate=parseInt(date);
+                        }   
+                        break;
+                      case "midGamma":
+                        midGamma=rawData;
+                        if (date.length===21) {
+                            epochDate=moment(date.substring(0,18) + "Z","YYYYMMDDHHmmss.SSSZ").valueOf();    
+                        }
+                        else {
+                            epochDate=parseInt(date);
+                        }   
+                        break;
+                      case "loAlpha":
+                        loAlpha=rawData;
+                        if (date.length===21) {
+                            epochDate=moment(date.substring(0,18) + "Z","YYYYMMDDHHmmss.SSSZ").valueOf();    
+                        }
+                        else {
+                            epochDate=parseInt(date);
+                        }   
+                        break;
+                      case "loBeta":
+                        loBeta=rawData;
+                        if (date.length===21) {
+                            epochDate=moment(date.substring(0,18) + "Z","YYYYMMDDHHmmss.SSSZ").valueOf();    
+                        }
+                        else {
+                            epochDate=parseInt(date);
+                        }   
+                        break;
+                      case "loGamma":
+                        loGamma=rawData;
+                        if (date.length===21) {
+                            epochDate=moment(date.substring(0,18) + "Z","YYYYMMDDHHmmss.SSSZ").valueOf();    
+                        }
+                        else {
+                            epochDate=parseInt(date);
+                        }   
+                        break;
+                      case "theta":
+                        theta=rawData;
+                        if (date.length===21) {
+                            epochDate=moment(date.substring(0,18) + "Z","YYYYMMDDHHmmss.SSSZ").valueOf();    
+                        }
+                        else {
+                            epochDate=parseInt(date);
+                        }   
+                        break;
+                    }
+                  });
+                  if(attention) {
+                    attentionData.values[0].push({date: epochDate, value:attention});
+                    attentionMeditationData.values[0].push({date: epochDate, value:attention});
+                    // attentionData.values[0].push(attention);
+                    // attentionMeditationData.values[0].push(attention);
+                    // attentionData.times.push(epochDate);
+                    // if(attentionMeditationData.times.indexOf(epochDate)===-1) attentionMeditationData.times.push(epochDate);
+                    // if(attentionData.start>epochDate) attentionData.start=epochDate;
+                    // if(attentionData.end<epochDate) attentionData.end=epochDate;
+                  }
+                  if(meditation) {
+                    meditationData.values[0].push({date: epochDate, value:meditation});
+                    attentionMeditationData.values[1].push({date: epochDate, value:meditation});
+                    // meditationData.values[0].push(meditation);
+                    // attentionMeditationData.values[1].push(meditation);
+                    // meditationData.times.push(epochDate);
+                    // if(attentionMeditationData.times.indexOf(epochDate)===-1) attentionMeditationData.times.push(epochDate);
+                    // if(meditationData.start>epochDate) meditationData.start=epochDate;
+                    // if(meditationData.end<epochDate) meditationData.end=epochDate;
+                    // if(attentionMeditationData.start>epochDate) attentionMeditationData.start=epochDate;
+                    // if(attentionMeditationData.end<epochDate) attentionMeditationData.end=epochDate;
+                  }
+                  if(delta) {
+                    deltaData.values[0].push({date: epochDate, value:delta});
+                    // deltaData.values[0].push(delta);
+                    // deltaData.times.push(epochDate);
+                    // if(deltaData.start>epochDate) deltaData.start=epochDate;
+                    // if(deltaData.end<epochDate) deltaData.end=epochDate;
+                  }
+                  if(theta) {
+                    thetaData.values[0].push({date: epochDate, value:theta});
+                    // thetaData.values[0].push(theta);
+                    // thetaData.times.push(epochDate);
+                    // if(thetaData.start>epochDate) thetaData.start=epochDate;
+                    // if(thetaData.end<epochDate) thetaData.end=epochDate;
+                  }
+                  if(midGamma && loGamma) {
+                    gammaData.values[0].push({date: epochDate, value:midGamma});
+                    gammaData.values[1].push({date: epochDate, value:loGamma});
+                    // gammaData.values[0].push(midGamma);
+                    // gammaData.values[1].push(loGamma);
+                    // gammaData.times.push(epochDate);
+                    // if(gammaData.start>epochDate) gammaData.start=epochDate;
+                    // if(gammaData.end<epochDate) gammaData.end=epochDate;
+                  }
+                  if(hiBeta && loBeta) {
+                    betaData.values[0].push({date: epochDate, value:hiBeta});
+                    betaData.values[1].push({date: epochDate, value:loBeta});
+                    // betaData.values[0].push(hiBeta);
+                    // betaData.values[1].push(loBeta);
+                    // betaData.times.push(epochDate);
+                    // if(betaData.start>epochDate) betaData.start=epochDate;
+                    // if(betaData.end<epochDate) betaData.end=epochDate;
+                  }
+                  if(hiAlpha && loAlpha) {
+                    alphaData.values[0].push({date: epochDate, value:hiAlpha});
+                    alphaData.values[1].push({date: epochDate, value:loAlpha});
+                    // alphaData.values[0].push(hiAlpha);
+                    // alphaData.values[1].push(loAlpha);
+                    // alphaData.times.push(epochDate);
+                    // if(alphaData.start>epochDate) alphaData.start=epochDate;
+                    // if(alphaData.end<epochDate) alphaData.end=epochDate;
+                  }
+                  if(midGamma && loGamma && hiBeta && loBeta && hiAlpha && loAlpha && delta && theta) {
+                    eegData.values[0].push({date: epochDate, value: hiAlpha});
+                    eegData.values[1].push({date: epochDate, value: loAlpha});
+                    eegData.values[2].push({date: epochDate, value: hiBeta});
+                    eegData.values[3].push({date: epochDate, value: loBeta});
+                    eegData.values[4].push({date: epochDate, value: midGamma});
+                    eegData.values[5].push({date: epochDate, value: loGamma});
+                    eegData.values[6].push({date: epochDate, value: theta});
+                    eegData.values[7].push({date: epochDate, value: delta});
+                    // eegData.values[0].push(hiAlpha);
+                    // eegData.values[1].push(loAlpha);
+                    // eegData.values[2].push(hiBeta);
+                    // eegData.values[3].push(loBeta);
+                    // eegData.values[4].push(midGamma);
+                    // eegData.values[5].push(loGamma);
+                    // eegData.values[6].push(theta);
+                    // eegData.values[7].push(delta);
+                    // eegData.times.push(epochDate);
+                    // eegData.values.push([hiAlpha,loAlpha,hiBeta,loBeta,midGamma,loGamma,theta,delta]);
+                    // if(eegData.start>epochDate) eegData.start=epochDate;
+                    // if(eegData.end<epochDate) eegData.end=epochDate;
+                  }
+                 });
+            };
+            resetMindWaveData();
+            parseMindWaveData(mindWaveData);
+            
+            // create graph now that we've added presentation config
+            var l1 = new LineGraph({containerId: 'eegGraph', data: eegData});
+            var l2 = new LineGraph({containerId: 'eegAlpha', data: alphaData});
+            var l3 = new LineGraph({containerId: 'eegBeta', data: betaData});
+            var l4 = new LineGraph({containerId: 'eegGamma', data: gammaData});
+            var l5 = new LineGraph({containerId: 'eegTheta', data: thetaData});
+            var l6 = new LineGraph({containerId: 'eegDelta', data: deltaData});
+            var l7 = new LineGraph({containerId: 'attentionMeditation', data: attentionMeditationData});
+            
+            setInterval(function() {
+              /*
+              * The following will simulate live updating of the data (see dataA, dataB, dataC etc in data.js which are real examples)
+              * This is being simulated so this example functions standalone without a backend server which generates data such as data.js contains.
+              */
+
+              // get the data
+              var intervalXhttp = new XMLHttpRequest();
+              var intervalXhttpResponse;
+              intervalXhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                  intervalXhttpResponse = JSON.parse(this.responseText);
+
+                  resetMindWaveData();
+                  parseMindWaveData(intervalXhttpResponse);
+                                
+                  l1.slideData(eegData);
+                  l2.slideData(alphaData);
+                  l3.slideData(betaData);
+                  l4.slideData(gammaData);
+                  l5.slideData(thetaData);
+                  l6.slideData(deltaData);
+                  l7.slideData(attentionMeditationData);
+                }
+              };
+              if (totalItems && (totalItems !== prevTotalItems) || (skippedIterations>3)) {
+                //intervalXhttp.open("GET", "/api/db/MindWave/list?showDetail=true&start=" + totalItems,true);
+                prevTotalItems = totalItems;
+                skippedIterations = 0;
+                intervalXhttp.open("GET", "/api/db/MindWave/list?showDetail=true&start=" + totalItems + "&limit=5",true);
+                intervalXhttp.send();
+              }
+              else {
+                console.log("skipping iteration");
+                skippedIterations++;
+              }
+            }, 1000); 
+        </script>
+    </body>
+</html>

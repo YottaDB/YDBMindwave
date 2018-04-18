@@ -1,0 +1,6 @@
+#!/bin/bash
+$ydb_dist/mupip set -replication=on -region "DEFAULT"
+$ydb_dist/mupip set -journal=disable -region "OUTBOUND"
+$ydb_dist/mupip replicate -instance_create
+$ydb_dist/mupip replicate -source -start -passive -instsecondary=mindwave -buffsize=1048576 -log=$ydb_tmp/mwToWeb-source.log
+$ydb_dist/mupip replicate -receive -start -listenport=3000 -buffsize=1048576 -log=$ydb_tmp/mwToWeb-receive.log

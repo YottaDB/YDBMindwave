@@ -1,0 +1,4 @@
+#!/bin/bash
+$ydb_dist/mupip replicate -receive -shutdown -timeout=0
+$ydb_dist/mupip replicate -source -shutdown -timeout=0
+$ydb_dist/mupip rundown -region "*"

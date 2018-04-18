@@ -1,0 +1,19 @@
+{
+  "name": "yottadbdemo-mindwave-frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ewd-client": "^1.18.0",
+    "module-exists": "^0.2.1",
+    "qewd": "^2.33.3",
+    "qewd-monitor": "^2.4.0",
+    "nodem": "^0.11.1",
+    "traverse": "^0.6.6"
+  }
+}

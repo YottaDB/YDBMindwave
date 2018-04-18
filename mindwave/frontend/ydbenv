@@ -1,0 +1,25 @@
+# Required YottaDB environment variables
+export ydb_dir=~/Projects/YottaDBDemos/mindwave/frontend
+export ydb_log=$ydb_dir/log
+export ydb_tmp=$ydb_dir/tmp
+export ydb_prompt="YDB-WEB>"
+export gtm_prompt="$ydb_prompt"
+export ydb_gbldir=$ydb_dir/g/web.gld
+export ydb_dist=/usr/local/lib/yottadb/current
+export ydb_routines="$ydb_dir/o*($ydb_dir/r $ydb_dir/node_modules/nodem/src) $ydb_dist/libyottadbutil.so $ydb_dist"
+export gtmroutines="$ydb_routines"
+export ydb_etrap='Write:(0=$STACK) "Error occurred: ",$ZStatus,!'
+
+# Replication environment variables
+export gtm_repl_instance=$ydb_dir/g/web.repl
+export gtm_repl_instname=web
+
+# Setup C Call-In for NodeM
+export GTMCI=$ydb_dir/node_modules/nodem/resources/nodem.ci
+
+# Ensure directories are created
+mkdir -p $ydb_dir/{g,o,r,log,tmp}
+
+# Alias mumps and mupip to make command line access easier
+alias mumps=$ydb_dist/mumps
+alias mupip=$ydb_dist/mupip

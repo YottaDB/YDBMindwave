@@ -56,17 +56,22 @@ The author is using a Raspberry Pi Zero W without the desktop for documentation 
      * Type: `sudo ln -s $(ls -1 /usr/local/lib/yottadb) /usr/local/lib/yottadb/current`
      * Type: `sudo ln -s /usr/local/lib/yottadb/current/libyottadb.so /usr/local/lib`
      * Type: `sudo ldconfig`
- 14. Retrieve MindWave demo source code (backend & frontend)
+ 13. Retrieve MindWave demo source code (backend & frontend)
      * Type: `sudo apt-get install git -y`
      * Type: `mkdir -p ~/Projects`
      * Type: `cd Projects`
      * Type: `git clone https://github.com/YottaDB/YottaDBDemos.git`
- 13. Setup MindWave IoT database (backend)
+ 14. Install node.js (backend & frontend)
+     * Type: `curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash`
+     * Type: `export NVM_DIR="$HOME/.nvm"`
+     * Type: `source "$NVM_DIR/nvm.sh"`
+     * Type: `nvm install --lts`
+ 15. Setup MindWave IoT database (backend)
      * Type: `cd YottaDBDemos/mindwave/backend`
      * Type: `source ydbenv`
      * Type: `mumps -run GDE < gde`
      * Type: `mupip create`
- 14. Pair MindWave device (backend)
+ 16. Pair MindWave device (backend)
      * Type: `sudo bluetoothctl`
      * Type: `agent on`
      * Type: `default-agent`
@@ -78,31 +83,28 @@ The author is using a Raspberry Pi Zero W without the desktop for documentation 
      * Type: `pair «your MindWave MAC address»`
      * Type: `exit`
      * Type: `sudo rfcomm bind /dev/rfcomm0 «your MindWave MAC address» 1`
- 15. Install node.js (backend & frontend)
-     * Type: `curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash`
-     * Type: `export NVM_DIR="$HOME/.nvm"`
-     * Type: `source "$NVM_DIR/nvm.sh"`
-     * Type: `nvm install --lts`
- 16. Install & Start the MindWave process (backend)
-     * Type: `cd YottaDBDemos/mindwave/backend`
+ 17. Install & Start the MindWave process (backend)
+     * Type: `cd ~/Projects/YottaDBDemos/mindwave/backend`
      * Type: `npm install`
      * Type: `node index.js`
- 17. Setup MindWave IoT database (frontend)
-     * Type: `cd YottaDBDemos/mindwave/frontend`
-     * Type: `source ydbenv`
-     * Type: `mumps -run GDE < gde`
-     * Type: `mupip create`
- 18. Install & Start the QEWD process (frontend)
+ 18. Install QEWD (frontend)
      * Note: This can be done on either the same machine or a different one depending on your configuration
-     * Type: `cd YottaDBDemos/mindwave/frontend`
+     * Type: `cd ~/Projects/YottaDBDemos/mindwave/frontend`
      * Type: `npm install`
      * Type: `cp node_modules/qewd-monitor/www/{bundle.js,*.html,*.css} www/qewd-monitor`
      * Type: `cp node_modules/ewd-client/lib/proto/ewd-client.js www`
+ 19. Setup MindWave IoT database (frontend)
+     * Type: `cd ~/Projects/YottaDBDemos/mindwave/frontend`
+     * Type: `source ydbenv`
+     * Type: `mumps -run GDE < gde`
+     * Type: `mupip create`
+ 20. Start QEWD
+     * Type: `cd ~/Projects/YottaDBDemos/mindwave/frontend`
      * Type: `node qewd-ydb.js`
      * Make sure that the QEWD-Monitor application and API calls return no errors:
        * In a web browser open: «your Pi Zero IP address»:8080/qewd-monitor/ Password: keepThisSecret! You should be able to login to the application successfully
        * In a web browser open: «your Pi Zero IP address»:8080/api/db/MindWave/list You should see "No MindWave Documents exist".
- 21. Run full application
+ 20. Run full application
      In one terminal window (backend):
      * Turn on and put on the MindWave device
      * Type: `sudo rfcomm bind /dev/rfcomm0 «your MindWave MAC address» 1`

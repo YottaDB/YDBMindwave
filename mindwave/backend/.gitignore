@@ -7,3 +7,6 @@ tmp/*
 
 # Ignore node modules
 node_modules/*
+
+# Ignore log files
+*.log

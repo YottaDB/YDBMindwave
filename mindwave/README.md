@@ -119,3 +119,39 @@ The author is using a Raspberry Pi Zero W without the desktop for documentation 
      * Type: `./replication_start`
      * Type: `node qewd-ydb.js`
      Open http://«your Pi Zero IP address»:8080/mindwave/ in your web browser
+
+# Self Contained Demo
+
+The entire demo can be put on a Raspberry Pi Zero (both front and backend) with a 2.8" LCD screen attached to the header pins and configured as an access point to be used at conferences, etc.
+
+This requires the normal rapbian image with a gui vs stretch lite.
+
+## Additional item
+
+ * [iUniker 2.8" Raspberry Pi Zero Touchscreen](https://www.amazon.com/Raspberry-iUniker-2-8-inch-Resolution-Touchscreen/dp/B07567M2NW)
+
+## Directions
+
+ * Follow main directions above to get the demo working
+ * Add the following to `/etc/rc.local`
+   ```
+   # Start mindwave backend
+   cd /home/pi/Projects/YottaDBDemos/mindwave/backend/
+   su pi -c ./mindwave_start
+   cd /home/pi/Projects/YottaDBDemos/mindwave/frontend/
+   su pi -c ./mindwave_start
+   ```
+ * Add the following to `/home/pi/.config/lxsession/LXDE-pi/autostart`
+   ```
+   @chromium-browser --kiosk http://localhost:8080/mindwave/chernoff.html
+   ```
+ * Move wifi configuration to a backup file as it can't be used when running as an access point
+   * Type: `sudo mv /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf.old`
+ * [Setup the Raspberry Pi Zero as an access point](https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md)
+ * Modify chrome preferences so that it doesn't want to restore pages on starup:
+   * Type: `vi ~/.config/chromium/Default/Preferences`
+   * Search for: `exit_type`
+   * Make sure that the value (in JSON format) for `exit_type` is `none`
+   * Make sure that the value for `exited_cleanly` is `true`
+   * Save and quit
+ 

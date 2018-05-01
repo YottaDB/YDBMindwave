@@ -1,0 +1,10 @@
+#!/bin/bash
+
+source ydbenv
+source $HOME/.nvm/nvm.sh
+rm g/*
+$ydb_dist/mumps -run ^GDE < gde
+$ydb_dist/mupip create
+./replication_start
+sudo rfcomm bind /dev/rfcomm0 24:71:89:E9:51:48 1
+node index.js > mindwave.log &

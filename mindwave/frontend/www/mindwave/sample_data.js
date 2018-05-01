@@ -46,24 +46,3 @@
         "meditation": 100
     }
 };
-
-var xhttp = new XMLHttpRequest();
-var xhttpResponse;
-xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-                xhttpResponse = JSON.parse(this.responseText);
-                resetMindWaveData();
-                console.log("parsing MindWave Data");
-                parseMindWaveData(xhttpResponse);
-                l1.updateData(eegData);
-                l2.updateData(alphaData);
-                l3.updateData(betaData);
-                l4.updateData(gammaData);
-                l5.updateData(thetaData);
-                l6.updateData(deltaData);
-                l7.updateData(attentionMeditationData);
-        }
-};
-
-xhttp.open("GET", "/api/db/MindWave/list?showDetail=true",true);
-xhttp.send();

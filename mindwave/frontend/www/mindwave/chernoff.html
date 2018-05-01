@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!-- Code from: https://gist.github.com/larskotthoff/2011590 -->
+<html>
+    <head>
+        <title>Chernoff faces</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <script type="text/javascript" src="http://www.larsko.org/v/d3.min.js"></script>
+        <script type="text/javascript" src="http://www.larsko.org/v/hpi/chernoff.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.21.0/moment.min.js"></script>
+        <script src="sample_data.js"></script>
+        <script src="mindwave.js"></script>
+        <style type="text/css">
+.chernoff > * {
+    fill: none;
+    stroke: #000;
+}
+        </style>
+    </head>
+
+    <body>
+        <div id="face"></div>
+        <script type="text/javascript">
+            var eegData,alphaData,betaData,gammaData,thetaData,deltaData,attentionData,meditationData,attentionMeditationData, totalItems, prevTotalItems, skippedIterations;
+            var svg,c;
+
+            totalItems = 0;
+            prevTotalItems = 0;
+            skippedIterations = 0;
+
+            // from: https://stackoverflow.com/questions/14224535/scaling-between-two-number-ranges
+            function convertRange( value, orignialRange, desiredRange ) { 
+                return ( value - orignialRange[ 0 ] ) * ( desiredRange[ 1 ] - desiredRange[ 0 ] ) / ( orignialRange[ 1 ] - orignialRange[ 0 ] ) + desiredRange[ 0 ];
+            }
+
+            resetMindWaveData();
+            parseMindWaveData(mindWaveData);
+            // best browValues are between -4 and 4
+            var browValue = 0;
+            // best mouthValues are between -2 and 2
+            var mouthValue = 0;
+            if (attentionData.values[0] && attentionData.values[0][attentionData.values[0].length-1]) {
+                browValue = convertRange(attentionData.values[0][attentionData.values[0].length-1].value,[0,100],[-4,4]);
+                console.log("browValue: " + browValue);
+            }
+            if (meditationData.values[0] && meditationData.values[0][meditationData.values[0].length-1]) {
+                mouthValue = convertRange(meditationData.values[0][meditationData.values[0].length-1].value,[0,100],[-2,2]);
+                console.log("mouthValue: " + mouthValue);
+            }
+            (function () {
+            c = d3.chernoff()
+                .face(function(d) { return d.f; })
+                .hair(function(d) { return d.h; })
+                .mouth(function(d) { return d.m; })
+                .nosew(function(d) { return d.nw; })
+                .noseh(function(d) { return d.nh; })
+                .eyew(function(d) { return d.ew; })
+                .eyeh(function(d) { return d.eh; })
+                .brow(function(d) { return d.b; });
+            svg = d3.select("#face")
+                    .append("svg:svg")
+                    .attr("height", 480)
+                    .attr("width", 640),
+                    dat = [
+                            {f: 0, h: 0, m: mouthValue, nw: 1, nh: 1, ew: 1, eh: 1, b: browValue}
+                    ];
+            svg.selectAll("g.chernoff").data(dat).enter()
+                .append("svg:g")
+                .attr("class", "chernoff")
+                .attr("transform", "scale(3.5) translate(-5,-32)")
+                .call(c);
+            })();
+
+            setInterval(function() {
+              /*
+              * The following will simulate live updating of the data (see dataA, dataB, dataC etc in data.js which are real examples)
+              * This is being simulated so this example functions standalone without a backend server which generates data such as data.js contains.
+              */
+
+              // get the data
+              var intervalXhttp = new XMLHttpRequest();
+              var intervalXhttpResponse;
+              intervalXhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    intervalXhttpResponse = JSON.parse(this.responseText);
+
+                    resetMindWaveData();
+                    parseMindWaveData(intervalXhttpResponse);
+                    var browValue = 0;
+                    var mouthValue = 0;
+                    if (attentionData.values[0] && attentionData.values[0][attentionData.values[0].length-1]) {
+                        browValue = convertRange(attentionData.values[0][attentionData.values[0].length-1].value,[0,100],[-4,4]);
+                        console.log("browValue: " + browValue);
+                    }
+                    if (meditationData.values[0] && meditationData.values[0][meditationData.values[0].length-1]) {
+                        mouthValue = convertRange(meditationData.values[0][meditationData.values[0].length-1].value,[0,100],[-2,2]);
+                        console.log("mouthValue: " + mouthValue);
+                    }
+                    var data = [{f: 0, h: 0, m: mouthValue, nw: 1, nh: 1, ew: 1, eh: 1, b: browValue}];
+                    // remove the face
+                    svg.selectAll("g.chernoff")
+                       .remove();
+                    // now rebuild it
+                    svg.selectAll("g.chernoff")
+                       .data(data)
+                       .enter().append("svg:g")
+                       .attr("class", "chernoff")
+                       .attr("transform", "scale(3.5) translate(-5,-32)")
+                       .call(c);
+                    }
+              };
+              if (totalItems && (totalItems !== prevTotalItems) || (skippedIterations>3)) {
+                prevTotalItems = totalItems;
+                skippedIterations = 0;
+                intervalXhttp.open("GET", "/api/db/MindWave/list?showDetail=true&start=" + totalItems + "&limit=5",true);
+                intervalXhttp.send();
+              }
+              else {
+                console.log("skipping iteration");
+                skippedIterations++;
+              }
+            }, 1000); 
+        </script>
+    </body>
+</html>

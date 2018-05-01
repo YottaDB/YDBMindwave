@@ -1,0 +1,9 @@
+#!/bin/bash
+
+source ydbenv
+source $HOME/.nvm/nvm.sh
+rm g/*
+$ydb_dist/mumps -run ^GDE < gde
+$ydb_dist/mupip create
+./replication_start
+node qewd-ydb.js > qewd.log &

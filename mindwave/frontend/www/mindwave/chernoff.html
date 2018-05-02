@@ -1,125 +1,201 @@
 <!DOCTYPE html>
 <!-- Code from: https://gist.github.com/larskotthoff/2011590 -->
 <html>
-    <head>
-        <title>Chernoff faces</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-        <script type="text/javascript" src="d3.min.js"></script>
-        <script type="text/javascript" src="chernoff.js"></script>
-        <script src="underscore1.8.3-min.js"></script>
-        <script src="moment2.21.0.min.js"></script>
-        <script src="sample_data.js"></script>
-        <script src="mindwave.js"></script>
-        <style type="text/css">
-.chernoff > * {
-    fill: none;
-    stroke: #000;
-}
-        </style>
-    </head>
+  <head>
+    <title>Chernoff faces</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script type="text/javascript" src="d3.min.js"></script>
+    <script type="text/javascript" src="chernoff.js"></script>
+    <script src="underscore1.8.3-min.js"></script>
+    <script src="moment2.21.0.min.js"></script>
+    <script src="sample_data.js"></script>
+    <script src="mindwave.js"></script>
+    <link rel="stylesheet" href="css/yottadb.css" type="text/css"/>
+    <style type="text/css">
+      .chernoff > * {
+        fill: none;
+        stroke: #000;
+      }
+    </style>
+  </head>
 
-    <body>
-        <div id="face"></div>
-        <script type="text/javascript">
-            var eegData,alphaData,betaData,gammaData,thetaData,deltaData,attentionData,meditationData,attentionMeditationData, totalItems, prevTotalItems, skippedIterations;
-            var svg,c;
+  <body>
+    <header id="header" class="home-page">
+      <div class="container" id="main-header">
+        <div class="row" id="navholder">
+          <div class="col-md-6 col-sm-8" id="main-logo">
+            <a href="https://yottadb.com">
+              <img src="img/YottaDB_logo.svg" alt="YottaDB">
+            </a>
+          </div>
+          <nav class="col-md-18 col-sm-16" id="main-nav">
+            <div id="auxnav">
+              <div id="nav_auxmenu" class="nav">
+                <ul id="menu-aux-nav" class="menu">
+                  <li id="menu-item-29" class="gray menu-item menu-item-type-custom menu-item-object-custom menu-item-29">
+                    <a href="https://yottadb.com/about-us/contact/">Contact Us</a>
+                  </li>
+                  <li id="menu-item-30" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-30">
+                    <a target="_blank" href="https://yottadb.com/product/get-started/">Download</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <ul id="menu-main-menu" class="menu">
+              <li id="menu-item-63" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-63">
+                <a href="https://yottadb.com/product/">MindWave Demos</a>
+                <ul class="sub-menu">
+                  <li id="menu-item-65" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-65">
+                    <a href="//mindwave/index.html">Data Graphs</a>
+                  </li>
+                  <li id="menu-item-66" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-66">
+                    <a href="//mindwave/chernoff.html">Chernoff Faces</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </header>
+    <div id="face"></div>
+    <script type="text/javascript">
+      var eegData,alphaData,betaData,gammaData,thetaData,deltaData,attentionData,meditationData,attentionMeditationData, totalItems, prevTotalItems, skippedIterations;
+      var svg,c;
 
-            totalItems = 0;
-            prevTotalItems = 0;
-            skippedIterations = 0;
+      totalItems = 0;
+      prevTotalItems = 0;
+      skippedIterations = 0;
 
-            // from: https://stackoverflow.com/questions/14224535/scaling-between-two-number-ranges
-            function convertRange( value, orignialRange, desiredRange ) { 
-                return ( value - orignialRange[ 0 ] ) * ( desiredRange[ 1 ] - desiredRange[ 0 ] ) / ( orignialRange[ 1 ] - orignialRange[ 0 ] ) + desiredRange[ 0 ];
-            }
+      // from: https://stackoverflow.com/questions/14224535/scaling-between-two-number-ranges
+      function convertRange( value, orignialRange, desiredRange ) { 
+        return ( value - orignialRange[ 0 ] ) * ( desiredRange[ 1 ] - desiredRange[ 0 ] ) / ( orignialRange[ 1 ] - orignialRange[ 0 ] ) + desiredRange[ 0 ];
+      }
+
+      resetMindWaveData();
+      parseMindWaveData(mindWaveData);
+      // best browValues are between -4 and 4
+      var browValue = 0;
+      // best mouthValues are between -2 and 2
+      var mouthValue = 0;
+      if (attentionData.values[0] && attentionData.values[0][attentionData.values[0].length-1]) {
+        browValue = convertRange(attentionData.values[0][attentionData.values[0].length-1].value,[0,100],[-4,4]);
+        //console.log("browValue: " + browValue);
+      }
+      if (meditationData.values[0] && meditationData.values[0][meditationData.values[0].length-1]) {
+        mouthValue = convertRange(meditationData.values[0][meditationData.values[0].length-1].value,[0,100],[-2,2]);
+        //console.log("mouthValue: " + mouthValue);
+      }
+      (function () {
+      c = d3.chernoff()
+            .face(function(d) { return d.f; })
+            .hair(function(d) { return d.h; })
+            .mouth(function(d) { return d.m; })
+            .nosew(function(d) { return d.nw; })
+            .noseh(function(d) { return d.nh; })
+            .eyew(function(d) { return d.ew; })
+            .eyeh(function(d) { return d.eh; })
+            .brow(function(d) { return d.b; });
+      svg = d3.select("#face")
+              .append("svg:svg")
+              .attr("height", 480)
+              .attr("width", 640),
+              dat = [
+                      {f: 0, h: 0, m: mouthValue, nw: 1, nh: 1, ew: 1, eh: 1, b: browValue}
+              ];
+      svg.selectAll("g.chernoff").data(dat).enter()
+         .append("svg:g")
+         .attr("class", "chernoff")
+         .attr("transform", "scale(3.5) translate(-5,-32)")
+         .call(c);
+      })();
+
+      setInterval(function() {
+        // get the data
+        var intervalXhttp = new XMLHttpRequest();
+        var intervalXhttpResponse;
+        intervalXhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            intervalXhttpResponse = JSON.parse(this.responseText);
 
             resetMindWaveData();
-            parseMindWaveData(mindWaveData);
-            // best browValues are between -4 and 4
+            parseMindWaveData(intervalXhttpResponse);
             var browValue = 0;
-            // best mouthValues are between -2 and 2
             var mouthValue = 0;
             if (attentionData.values[0] && attentionData.values[0][attentionData.values[0].length-1]) {
-                browValue = convertRange(attentionData.values[0][attentionData.values[0].length-1].value,[0,100],[-4,4]);
-                console.log("browValue: " + browValue);
+              browValue = convertRange(attentionData.values[0][attentionData.values[0].length-1].value,[0,100],[-4,4]);
+              //console.log("browValue: " + browValue);
             }
             if (meditationData.values[0] && meditationData.values[0][meditationData.values[0].length-1]) {
-                mouthValue = convertRange(meditationData.values[0][meditationData.values[0].length-1].value,[0,100],[-2,2]);
-                console.log("mouthValue: " + mouthValue);
+              mouthValue = convertRange(meditationData.values[0][meditationData.values[0].length-1].value,[0,100],[-2,2]);
+              //console.log("mouthValue: " + mouthValue);
             }
-            (function () {
-            c = d3.chernoff()
-                .face(function(d) { return d.f; })
-                .hair(function(d) { return d.h; })
-                .mouth(function(d) { return d.m; })
-                .nosew(function(d) { return d.nw; })
-                .noseh(function(d) { return d.nh; })
-                .eyew(function(d) { return d.ew; })
-                .eyeh(function(d) { return d.eh; })
-                .brow(function(d) { return d.b; });
-            svg = d3.select("#face")
-                    .append("svg:svg")
-                    .attr("height", 480)
-                    .attr("width", 640),
-                    dat = [
-                            {f: 0, h: 0, m: mouthValue, nw: 1, nh: 1, ew: 1, eh: 1, b: browValue}
-                    ];
-            svg.selectAll("g.chernoff").data(dat).enter()
-                .append("svg:g")
-                .attr("class", "chernoff")
-                .attr("transform", "scale(3.5) translate(-5,-32)")
-                .call(c);
-            })();
-
-            setInterval(function() {
-              /*
-              * The following will simulate live updating of the data (see dataA, dataB, dataC etc in data.js which are real examples)
-              * This is being simulated so this example functions standalone without a backend server which generates data such as data.js contains.
-              */
-
-              // get the data
-              var intervalXhttp = new XMLHttpRequest();
-              var intervalXhttpResponse;
-              intervalXhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    intervalXhttpResponse = JSON.parse(this.responseText);
-
-                    resetMindWaveData();
-                    parseMindWaveData(intervalXhttpResponse);
-                    var browValue = 0;
-                    var mouthValue = 0;
-                    if (attentionData.values[0] && attentionData.values[0][attentionData.values[0].length-1]) {
-                        browValue = convertRange(attentionData.values[0][attentionData.values[0].length-1].value,[0,100],[-4,4]);
-                        console.log("browValue: " + browValue);
-                    }
-                    if (meditationData.values[0] && meditationData.values[0][meditationData.values[0].length-1]) {
-                        mouthValue = convertRange(meditationData.values[0][meditationData.values[0].length-1].value,[0,100],[-2,2]);
-                        console.log("mouthValue: " + mouthValue);
-                    }
-                    var data = [{f: 0, h: 0, m: mouthValue, nw: 1, nh: 1, ew: 1, eh: 1, b: browValue}];
-                    // remove the face
-                    svg.selectAll("g.chernoff")
-                       .remove();
-                    // now rebuild it
-                    svg.selectAll("g.chernoff")
-                       .data(data)
-                       .enter().append("svg:g")
-                       .attr("class", "chernoff")
-                       .attr("transform", "scale(3.5) translate(-5,-32)")
-                       .call(c);
-                    }
-              };
-              if (totalItems && (totalItems !== prevTotalItems) || (skippedIterations>3)) {
-                prevTotalItems = totalItems;
-                skippedIterations = 0;
-                intervalXhttp.open("GET", "/api/db/MindWave/list?showDetail=true&start=" + totalItems + "&limit=5",true);
-                intervalXhttp.send();
-              }
-              else {
-                console.log("skipping iteration");
-                skippedIterations++;
-              }
-            }, 1000); 
-        </script>
-    </body>
+            var data = [{f: 0, h: 0, m: mouthValue, nw: 1, nh: 1, ew: 1, eh: 1, b: browValue}];
+            // remove the face
+            svg.selectAll("g.chernoff")
+               .remove();
+            // now rebuild it
+            svg.selectAll("g.chernoff")
+               .data(data)
+               .enter().append("svg:g")
+               .attr("class", "chernoff")
+               .attr("transform", "scale(3.5) translate(-5,-32)")
+               .call(c);
+            }
+        };
+        if (totalItems && (totalItems !== prevTotalItems) || (skippedIterations>3)) {
+          prevTotalItems = totalItems;
+          skippedIterations = 0;
+          intervalXhttp.open("GET", "/api/db/MindWave/list?showDetail=true&start=" + totalItems + "&limit=5",true);
+          intervalXhttp.send();
+        }
+        else {
+          console.log("skipping iteration");
+          skippedIterations++;
+        }
+      }, 1000); 
+    </script>
+    <footer class="inside-page-footer">
+      <div id="footer_top">
+        <div class="brg_shape_1" id="footer-brg_shape" data-stellar-ratio="1.5"></div>
+        <div class="container content-holder">
+          <div class="row" id="social-footer">
+            <div class="col-sm-16 col-sm-offset-4" id="social-holder">
+              <a href="https://stackoverflow.com/search?q=yottadb" target="_blank">
+                <img src="img/stackoverflow.png" alt="Stack Overflow">
+              </a>
+              <a href="https://github.com/YottaDB" target="_blank">
+                <img src="img/github.png" alt="GitHub">
+              </a>
+              <a href="https://twitter.com/YottaDB" target="_blank">
+                <img src="img/twitter.png" alt="Twitter">
+              </a>
+              <a href="https://www.linkedin.com/company/yottadb/" target="_blank">
+                <img src="img/linkedin.png" alt="LinkedIn">
+              </a>
+            </div>
+          </div>
+          <div class="row" id="footer-copyright">
+            <div class="col-sm-16 col-sm-offset-4">
+              © 2018 YottaDB, LLC. All Rights Reserved.
+              <ul id="menu-footer-menu" class="menu">
+                <li id="menu-item-458" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-458">
+                  <a href="https://yottadb.com/about-us/privacy-policy/">Privacy</a>
+                </li>
+                <li id="menu-item-459" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-459">
+                  <a href="https://yottadb.com/about-us/terms-of-use/">Terms</a>
+                </li>
+                <li id="menu-item-460" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-460">
+                  <a href="https://yottadb.com/about-us/copyright-statement/">Copyright</a>
+                </li>
+                <li id="menu-item-461" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-461">
+                  <a href="https://yottadb.com/product/license/">License</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
 </html>

@@ -57,7 +57,7 @@ function LineGraph(argsMap) {
   /* public methods */
   /* *************************************************************** */
   var self = this;
-  
+
   /**
    * This allows appending new data points to the end of the lines and sliding them within the time window:
    * - x-axis will slide to new range
@@ -69,11 +69,11 @@ function LineGraph(argsMap) {
     // validate data
     var validatedData = processDataMap(updatedData);
 
-    if(validatedData.values.length === 0) {
+    if (validatedData.values.length === 0) {
       Error("There is no data to append.");
       return;
     }
-    
+
     validatedData.values.forEach(function(dataArrays, index) {
       var existingDataArrayForIndex = data.values[index];
       dataArrays.forEach(function(value) {
@@ -89,7 +89,7 @@ function LineGraph(argsMap) {
     var startTime = 9999999999999;
     data.values.forEach(function(item) {
       item.forEach(function(value) {
-        if(value.date < startTime) {
+        if (value.date < startTime) {
           startTime = value.date;
         }
       });
@@ -111,35 +111,35 @@ function LineGraph(argsMap) {
 
     // rebind the data
     graph.selectAll("g .lines path")
-         .data(data.values);
-        
+      .data(data.values);
+
     /*
-    * The following transition implementation was learned from examples at http://bost.ocks.org/mike/path/
-    * In particular, view the HTML source for the last example on the page inside the tick() function.
-    */
+     * The following transition implementation was learned from examples at http://bost.ocks.org/mike/path/
+     * In particular, view the HTML source for the last example on the page inside the tick() function.
+     */
 
     // redraw each of the lines
-      // Transitions are turned off on this since the small steps we're taking
-      // don't actually look good when animated and it uses unnecessary CPU
-      // The quick-steps look cleaner, and keep the axis/line in-sync instead of jittering
-    redrawAxes(true);  
+    // Transitions are turned off on this since the small steps we're taking
+    // don't actually look good when animated and it uses unnecessary CPU
+    // The quick-steps look cleaner, and keep the axis/line in-sync instead of jittering
+    redrawAxes(true);
     redrawLines(false);
-      
-      // slide the lines left
-      //CETODO: figure out x function
-      // graph.selectAll("g .lines path")
-      //      //.attr("transform", "translate(" + x(new Date(oldStartTime.getTime() + (validatedData.startTime.getTime()-oldStartTime.getTime()))) + ")");
-      //      .attr("transform", "translate(" + x(data.values[0][0].date - oldStartTime.getTime()) + ")")
-      // //      //x(function(d,i) { console.log(d); return x(d.date); })
-      // // //d3.time.scale().domain([data.startTime, data.endTime]).range([0, w])
-      //      .call(xAxis);
-     
+
+    // slide the lines left
+    //CETODO: figure out x function
+    // graph.selectAll("g .lines path")
+    //      //.attr("transform", "translate(" + x(new Date(oldStartTime.getTime() + (validatedData.startTime.getTime()-oldStartTime.getTime()))) + ")");
+    //      .attr("transform", "translate(" + x(data.values[0][0].date - oldStartTime.getTime()) + ")")
+    // //      //x(function(d,i) { console.log(d); return x(d.date); })
+    // // //d3.time.scale().domain([data.startTime, data.endTime]).range([0, w])
+    //      .call(xAxis);
+
     handleDataUpdate();
-    
+
     // fire an event that data was updated
     $(container).trigger('LineGraph:dataModification');
   }
-  
+
   /**
    * This does a full refresh of the data:
    * - x-axis will slide to new range
@@ -150,8 +150,8 @@ function LineGraph(argsMap) {
     data = processDataMap(updatedData);
     // and then we rebind data.values to the lines
     graph.selectAll("g .lines path")
-         .data(data.values);
-    
+      .data(data.values);
+
     // redraw (with transition)
     redrawAxes(true);
 
@@ -159,9 +159,9 @@ function LineGraph(argsMap) {
     // such as going from 700 points to 150 to 400
     // and because of that we rebind the data anyways which doesn't work with transitions very well at all
     redrawLines(false);
-    
+
     handleDataUpdate();
-    
+
     // fire an event that data was updated
     $(container).trigger('LineGraph:dataModification');
   }
@@ -170,7 +170,7 @@ function LineGraph(argsMap) {
     yScale = 'pow';
     redrawAxes(true);
     redrawLines(true);
-    
+
     // fire an event that config was changed
     $(container).trigger('LineGraph:configModification')
   }
@@ -179,20 +179,20 @@ function LineGraph(argsMap) {
     yScale = 'log';
     redrawAxes(true);
     redrawLines(true);
-    
+
     // fire an event that config was changed
     $(container).trigger('LineGraph:configModification')
   }
 
   this.switchToLinearScale = function() {
     yScale = 'linear';
-    redrawAxes(true);   
+    redrawAxes(true);
     redrawLines(true);
-    
+
     // fire an event that config was changed
     $(container).trigger('LineGraph:configModification')
   }
-  
+
   //Return the current scale value: pow, log or linear
   this.getScale = function() {
     return yScale;
@@ -204,31 +204,37 @@ function LineGraph(argsMap) {
   // the div we insert the graph into
   var containerId;
   var container;
-  
+
   // functions we use to display and interact with the graphs and lines
   var graph, x, yLeft, yRight, xAxis, yAxisLeft, yAxisRight, yAxisLeftDomainStart, linesGroup, linesGroupText, lines, lineFunction, lineFunctionSeriesIndex = -1;
   var yScale = 'linear'; // can be pow, log, linear
-  var scales = [['linear','Linear'], ['pow','Power'], ['log','Log']];
+  var scales = [
+    ['linear', 'Linear'],
+    ['pow', 'Power'],
+    ['log', 'Log']
+  ];
   var hoverContainer, hoverLine, hoverLineXOffset, hoverLineYOffset, hoverLineGroup;
   var legendFontSize = 12; // we can resize dynamically to make fit so we remember it here
 
   // instance storage of data to be displayed
   var data;
-    
+
   // define dimensions of graph
   var margin = [-1, -1, -1, -1]; // margins (top, right, bottom, left)
-  var w, h;  // width & height
-  
+  var w, h; // width & height
+
   var transitionDuration = 300;
-  
+
   var formatNumber = d3.format(",.0f"); // for formatting integers
-  var tickFormatForLogScale = function(d) { return formatNumber(d) };
-  
+  var tickFormatForLogScale = function(d) {
+    return formatNumber(d)
+  };
+
   // used to track if the user is interacting via mouse/finger instead of trying to determine
   // by analyzing various element class names to see if they are visible or not
   var userCurrentlyInteracting = false;
   var currentUserPositionX = -1;
-    
+
   /* *************************************************************** */
   /* initialization and validation */
   /* *************************************************************** */
@@ -236,35 +242,35 @@ function LineGraph(argsMap) {
     // required variables that we'll throw an error on if we don't find
     containerId = getRequiredVar(argsMap, 'containerId');
     container = document.querySelector('#' + containerId);
-    
+
     // margins with defaults (do this before processDataMap since it can modify the margins)
     margin[0] = getOptionalVar(argsMap, 'marginTop', 20); // marginTop allows fitting the actions, date and top of axis labels
-    margin[1] = getOptionalVar(argsMap, 'marginRight', 20);
+    margin[1] = getOptionalVar(argsMap, 'marginRight', 25);
     margin[2] = getOptionalVar(argsMap, 'marginBottom', 35); // marginBottom allows fitting the legend along the bottom
     margin[3] = getOptionalVar(argsMap, 'marginLeft', 90); // marginLeft allows fitting the axis labels
-    
+
     // assign instance vars from dataMap
     data = processDataMap(getRequiredVar(argsMap, 'data'));
-    
+
     /* set the default scale */
     yScale = data.scale;
 
     // do this after processing margins and executing processDataMap above
     initDimensions();
-    
+
     createGraph();
     //debug("Initialization successful for container: " + containerId)  
-    
+
     // window resize listener
     // de-dupe logic from http://stackoverflow.com/questions/667426/javascript-resize-event-firing-multiple-times-while-dragging-the-resize-handle/668185#668185
     var TO = false;
-    $(window).resize(function(){
-      if(TO !== false)
-          clearTimeout(TO);
+    $(window).resize(function() {
+      if (TO !== false)
+        clearTimeout(TO);
       TO = setTimeout(handleWindowResizeEvent, 200); // time in miliseconds
     });
   }
-  
+
   /* *************************************************************** */
   /* private methods */
   /* *************************************************************** */
@@ -290,44 +296,44 @@ function LineGraph(argsMap) {
     var endTime = 0;
 
     // default axis values
-    if(axis.length == 0) {
-      displayNames.forEach(function (value, index) {
+    if (axis.length == 0) {
+      displayNames.forEach(function(value, index) {
         // set the default to left axis
         axis[index] = "left";
       });
     } else {
       var hasRightAxis = false;
       axis.forEach(function(value) {
-        if(value == 'right') {
+        if (value == 'right') {
           hasRightAxis = true;
         }
       });
-      if(hasRightAxis) {
+      if (hasRightAxis) {
         // add space to right margin
         margin[1] = margin[1] + 50;
       }
     }
 
     // default colors values
-    if(colors.length == 0) {
-      names.forEach(function (value, index) {
+    if (colors.length == 0) {
+      names.forEach(function(value, index) {
         // set the default
         colors[index] = "black";
       });
     }
-    
+
     // default rounding values
-    if(rounding.length == 0) {
-      displayNames.forEach(function (value, index) {
+    if (rounding.length == 0) {
+      displayNames.forEach(function(value, index) {
         // set the default to 0 decimals
         rounding[index] = 0;
       });
     }
-    
+
     /* copy the dataValues array, do NOT assign the reference otherwise we modify the original source when we shift/push data */
     var newDataValues = [];
-    dataValues.forEach(function (value, index) {
-      value.forEach(function (item) {
+    dataValues.forEach(function(value, index) {
+      value.forEach(function(item) {
         // Error checking
         if (!item["date"]) {
           throw new Error("date value is required");
@@ -360,76 +366,76 @@ function LineGraph(argsMap) {
     startTime = new Date(parseInt(startTime));
     endTime = new Date(parseInt(endTime));
     return {
-      "values" : newDataValues,
-      "startTime" : startTime,
-      "endTime" : endTime,
-      "names" : names,
+      "values": newDataValues,
+      "startTime": startTime,
+      "endTime": endTime,
+      "names": names,
       "displayNames": displayNames,
-      "axis" : axis,
+      "axis": axis,
       "colors": colors,
-      "scale" : getOptionalVar(dataMap, 'scale', yScale),
-      "maxValues" : maxValues,
-      "rounding" : rounding,
+      "scale": getOptionalVar(dataMap, 'scale', yScale),
+      "maxValues": maxValues,
+      "rounding": rounding,
       "numAxisLabelsLinearScale": numAxisLabelsLinearScale,
       "numAxisLabelsPowerScale": numAxisLabelsPowerScale
     };
   }
-  
+
   var redrawAxes = function(withTransition) {
     initY();
     initX();
-    
-    if(withTransition) {
+
+    if (withTransition) {
       // slide x-axis to updated location
       graph.selectAll("g .x.axis").transition()
-         .duration(transitionDuration)
-         .ease("linear")
-         .call(xAxis);
-    
+        .duration(transitionDuration)
+        .ease("linear")
+        .call(xAxis);
+
       // slide y-axis to updated location
       graph.selectAll("g .y.axis.left").transition()
-         .duration(transitionDuration)
-         .ease("linear")
-         .call(yAxisLeft);
-      
-      if(yAxisRight != undefined) {
+        .duration(transitionDuration)
+        .ease("linear")
+        .call(yAxisLeft);
+
+      if (yAxisRight != undefined) {
         // slide y-axis to updated location
         graph.selectAll("g .y.axis.right").transition()
-           .duration(transitionDuration)
-           .ease("linear")
-           .call(yAxisRight);
+          .duration(transitionDuration)
+          .ease("linear")
+          .call(yAxisRight);
       }
     } else {
       // slide x-axis to updated location
       graph.selectAll("g .x.axis")
-         .call(xAxis);
-    
+        .call(xAxis);
+
       // slide y-axis to updated location
       graph.selectAll("g .y.axis.left")
-         .call(yAxisLeft);
+        .call(yAxisLeft);
 
-      if(yAxisRight != undefined) {     
+      if (yAxisRight != undefined) {
         // slide y-axis to updated location
         graph.selectAll("g .y.axis.right")
-           .call(yAxisRight);
+          .call(yAxisRight);
       }
     }
   }
-  
+
   var redrawLines = function(withTransition) {
     /**
-    * This is a hack to deal with the left/right axis.
-    *
-    * See createGraph for a larger comment explaining this. 
-    *
-    * Yes, it's ugly. If you can suggest a better solution please do.
-    */
+     * This is a hack to deal with the left/right axis.
+     *
+     * See createGraph for a larger comment explaining this. 
+     *
+     * Yes, it's ugly. If you can suggest a better solution please do.
+     */
     lineFunctionSeriesIndex = -1;
-    
+
     // redraw lines
-    if(withTransition) {
+    if (withTransition) {
       graph.selectAll("g .lines path")
-      .transition()
+        .transition()
         .duration(transitionDuration)
         .ease("linear")
         .attr("d", lineFunction)
@@ -440,7 +446,7 @@ function LineGraph(argsMap) {
         .attr("transform", null);
     }
   }
-  
+
   /*
    * Allow re-initializing the y function at any time.
    *  - it will properly determine what scale is being used based on last user choice (via public switchScale methods)
@@ -449,48 +455,48 @@ function LineGraph(argsMap) {
     initYleft();
     initYright();
   }
-  
+
   var initYleft = function() {
     var maxYscaleLeft = calculateMaxY(data, 'left');
     //debug("initY => maxYscale: " + maxYscaleLeft);
     var numAxisLabels = 6;
-    if(yScale == 'pow') {
-      yLeft = d3.scale.pow().exponent(0.3).domain([0, maxYscaleLeft]).range([h, 0]).nice(); 
+    if (yScale == 'pow') {
+      yLeft = d3.scale.pow().exponent(0.3).domain([0, maxYscaleLeft]).range([h, 0]).nice();
       numAxisLabels = data.numAxisLabelsPowerScale;
-    } else if(yScale == 'log') {
+    } else if (yScale == 'log') {
       // we can't have 0 so will represent 0 with a very small number
       // 0.1 works to represent 0, 0.01 breaks the tickFormatter
-      yLeft = d3.scale.log().domain([0.1, maxYscaleLeft]).range([h, 0]).nice(); 
-    } else if(yScale == 'linear') {
+      yLeft = d3.scale.log().domain([0.1, maxYscaleLeft]).range([h, 0]).nice();
+    } else if (yScale == 'linear') {
       yLeft = d3.scale.linear().domain([0, maxYscaleLeft]).range([h, 0]).nice();
       numAxisLabels = data.numAxisLabelsLinearScale;
     }
 
     yAxisLeft = d3.svg.axis().scale(yLeft).ticks(numAxisLabels, tickFormatForLogScale).orient("left");
   }
-  
+
   var initYright = function() {
     var maxYscaleRight = calculateMaxY(data, 'right');
     // only create the right axis if it has values
-    if(maxYscaleRight != undefined) {
+    if (maxYscaleRight != undefined) {
       //debug("initY => maxYscale: " + maxYscaleRight);
       var numAxisLabels = 6;
-      if(yScale == 'pow') {
-        yRight = d3.scale.pow().exponent(0.3).domain([0, maxYscaleRight]).range([h, 0]).nice();   
+      if (yScale == 'pow') {
+        yRight = d3.scale.pow().exponent(0.3).domain([0, maxYscaleRight]).range([h, 0]).nice();
         numAxisLabels = data.numAxisLabelsPowerScale;
-      } else if(yScale == 'log') {
+      } else if (yScale == 'log') {
         // we can't have 0 so will represent 0 with a very small number
         // 0.1 works to represent 0, 0.01 breaks the tickFormatter
-        yRight = d3.scale.log().domain([0.1, maxYscaleRight]).range([h, 0]).nice(); 
-      } else if(yScale == 'linear') {
+        yRight = d3.scale.log().domain([0.1, maxYscaleRight]).range([h, 0]).nice();
+      } else if (yScale == 'linear') {
         yRight = d3.scale.linear().domain([0, maxYscaleRight]).range([h, 0]).nice();
         numAxisLabels = data.numAxisLabelsLinearScale;
       }
-      
+
       yAxisRight = d3.svg.axis().scale(yRight).ticks(numAxisLabels, tickFormatForLogScale).orient("right");
     }
   }
-  
+
   /*
    * Whenever we add/update data we want to re-calculate if the max Y scale has changed
    */
@@ -501,20 +507,20 @@ function LineGraph(argsMap) {
 
     var maxValuesForAxis = [];
     data.maxValues.forEach(function(value, index) {
-      if(data.axis[index] == whichAxis) {
+      if (data.axis[index] == whichAxis) {
         maxValuesForAxis.push(value);
       }
     });
     // we now have the max values for the axis we're interested in so get the max of them
     return d3.max(maxValuesForAxis);
   }
-  
+
   /*
    * Allow re-initializing the x function at any time.
    */
   var initX = function() {
     x = d3.time.scale().domain([data.startTime, data.endTime]).range([0, w]);
-    
+
     // create xAxis (with ticks)
     xAxis = d3.svg.axis().scale(x).tickSize(-h).tickSubdivide(1);
     // without ticks
@@ -522,84 +528,84 @@ function LineGraph(argsMap) {
   }
 
   /**
-  * Creates the SVG elements and displays the line graph.
-  *
-  * Expects to be called once during instance initialization.
-  */
+   * Creates the SVG elements and displays the line graph.
+   *
+   * Expects to be called once during instance initialization.
+   */
   var createGraph = function() {
-    
+
     // Add an SVG element with the desired dimensions and margin.
     graph = d3.select("#" + containerId).append("svg:svg")
-              .attr("class", "line-graph")
-              .attr("width", w + margin[1] + margin[3])
-              .attr("height", h + margin[0] + margin[2])  
-              .append("svg:g")
-              .attr("transform", "translate(" + margin[3] + "," + margin[0] + ")");
+      .attr("class", "line-graph")
+      .attr("width", w + margin[1] + margin[3])
+      .attr("height", h + margin[0] + margin[2])
+      .append("svg:g")
+      .attr("transform", "translate(" + margin[3] + "," + margin[0] + ")");
 
     initX();
-    
+
     // Add the x-axis.
     graph.append("svg:g")
-         .attr("class", "x axis")
-         .attr("transform", "translate(0," + h + ")")
-         .call(xAxis);
-      
-    
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + h + ")")
+      .call(xAxis);
+
+
     // y is all done in initY because we need to re-assign vars quite often to change scales
     initY();
-        
+
     // Add the y-axis to the left
     graph.append("svg:g")
-         .attr("class", "y axis left")
-         .attr("transform", "translate(-10,0)")
-         .call(yAxisLeft);
-      
-    if(yAxisRight != undefined) {
+      .attr("class", "y axis left")
+      .attr("transform", "translate(-10,0)")
+      .call(yAxisLeft);
+
+    if (yAxisRight != undefined) {
       // Add the y-axis to the right if we need one
       graph.append("svg:g")
-           .attr("class", "y axis right")
-           .attr("transform", "translate(" + (w+10) + ",0)")
-           .call(yAxisRight);
+        .attr("class", "y axis right")
+        .attr("transform", "translate(" + (w + 10) + ",0)")
+        .call(yAxisRight);
     }
-        
+
     // create line function used to plot our data
     lineFunction = d3.svg.line()
       // assign the X function to plot our line as we wish
-      .x(function(d,i) { 
+      .x(function(d, i) {
         return x(d.date);
       })
-      .y(function(d, i) { 
-        if(yScale == 'log' && d < 0.1) {
+      .y(function(d, i) {
+        if (yScale == 'log' && d < 0.1) {
           // log scale can't have 0s, so we set it to the smallest value we set on y
           d = 0.1;
         }
-        
+
         /**
-        * This is a hack that relies on:
-        *   a) the single-threaded nature of javascript that this will not be interleaved
-        *   b) that lineFunction will always be passed the data[] for all lines in the same way each time
-        *
-        * We then use an external variable to track each time we move from one series to the next
-        * so that we can have its seriesIndex to access information in the data[] object, particularly
-        * so we can determine what axis this data is supposed to be on.
-        *
-        * I didn't want to split the line function into left and right lineFunctions as that would really
-        * complicate the data binding.
-        *
-        * Also ... I can't figure out nested functions to keep it scoped so I had to put lineFunctionSeriesIndex
-        * as a variable in the same scope as lineFunction. Ugly. And worse ... reset it in redrawAxes. 
-        *
-        * Anyone reading this who knows a better solution please let me know.
-        */
-        if(i == 0) {
+         * This is a hack that relies on:
+         *   a) the single-threaded nature of javascript that this will not be interleaved
+         *   b) that lineFunction will always be passed the data[] for all lines in the same way each time
+         *
+         * We then use an external variable to track each time we move from one series to the next
+         * so that we can have its seriesIndex to access information in the data[] object, particularly
+         * so we can determine what axis this data is supposed to be on.
+         *
+         * I didn't want to split the line function into left and right lineFunctions as that would really
+         * complicate the data binding.
+         *
+         * Also ... I can't figure out nested functions to keep it scoped so I had to put lineFunctionSeriesIndex
+         * as a variable in the same scope as lineFunction. Ugly. And worse ... reset it in redrawAxes. 
+         *
+         * Anyone reading this who knows a better solution please let me know.
+         */
+        if (i == 0) {
           lineFunctionSeriesIndex++;
         }
         var axis = data.axis[lineFunctionSeriesIndex];
         var _y;
-        if(axis == 'right') {
-          _y = yRight(d.value); 
+        if (axis == 'right') {
+          _y = yRight(d.value);
         } else {
-          _y = yLeft(d.value); 
+          _y = yLeft(d.value);
         }
 
         // verbose logging to show what's actually being done
@@ -610,75 +616,75 @@ function LineGraph(argsMap) {
 
     // append a group to contain all lines
     lines = graph.append("svg:g")
-                 .attr("class", "lines")
-                 .selectAll("path")
-                 .data(data.values); // bind the array of arrays
+      .attr("class", "lines")
+      .selectAll("path")
+      .data(data.values); // bind the array of arrays
 
     // persist this reference so we don't do the selector every mouse event
     hoverContainer = container.querySelector('g .lines');
-    
-    
+
+
     $(container).mouseleave(function(event) {
       handleMouseOutGraph(event);
     });
-    
+
     $(container).mousemove(function(event) {
       handleMouseOverGraph(event);
     });
 
-          
+
     // add a line group for each array of values (it will iterate the array of arrays bound to the data function above)
     linesGroup = lines.enter()
-                      .append("g")
-                      .attr("class", function(d, i) {
-                        return "line_group series_" + i;
-                      });
-        
+      .append("g")
+      .attr("class", function(d, i) {
+        return "line_group series_" + i;
+      });
+
     // add path (the actual line) to line group
     linesGroup.append("path")
-              .attr("class", function(d, i) {
-                //debug("Appending line [" + containerId + "]: " + i)
-                return "line series_" + i;
-              })
-              .attr("fill", "none")
-              .attr("stroke", function(d, i) {
-                return data.colors[i];
-              })
-              .attr("d", lineFunction) // use the 'lineFunction' to create the data points in the correct x,y axis
-              .on('mouseover', function(d, i) {
-                handleMouseOverLine(d, i);
-              });
-        
+      .attr("class", function(d, i) {
+        //debug("Appending line [" + containerId + "]: " + i)
+        return "line series_" + i;
+      })
+      .attr("fill", "none")
+      .attr("stroke", function(d, i) {
+        return data.colors[i];
+      })
+      .attr("d", lineFunction) // use the 'lineFunction' to create the data points in the correct x,y axis
+      .on('mouseover', function(d, i) {
+        handleMouseOverLine(d, i);
+      });
+
     // add line label to line group
     linesGroupText = linesGroup.append("svg:text");
     linesGroupText.attr("class", function(d, i) {
-                    //debug("Appending line [" + containerId + "]: " + i)
-                    return "line_label series_" + i;
-                  })
-                  .text(function(d, i) {
-                    return "";
-                  });
-      
+        //debug("Appending line [" + containerId + "]: " + i)
+        return "line_label series_" + i;
+      })
+      .text(function(d, i) {
+        return "";
+      });
+
     // add a 'hover' line that we'll show as a user moves their mouse (or finger)
     // so we can use it to show detailed values of each line
     hoverLineGroup = graph.append("svg:g")
-                          .attr("class", "hover-line");
+      .attr("class", "hover-line");
     // add the line to the group
     hoverLine = hoverLineGroup.append("svg:line")
-                              .attr("x1", 10)
-                              .attr("x2", 10) // vertical line so same value on each
-                              .attr("y1", 0)
-                              .attr("y2", h); // top to bottom  
-        
+      .attr("x1", 10)
+      .attr("x2", 10) // vertical line so same value on each
+      .attr("y1", 0)
+      .attr("y2", h); // top to bottom  
+
     // hide it by default
     hoverLine.classed("hide", true);
-      
+
     //createScaleButtons();
     createDateLabel();
-    createLegend();   
+    createLegend();
     setValueLabelsToLatest();
   }
-  
+
   /**
    * Create a legend that displays the name of each line with appropriate color coding
    * and allows for showing the current value when doing a mouseOver
@@ -686,132 +692,132 @@ function LineGraph(argsMap) {
   var createLegend = function() {
     // append a group to contain all lines
     var legendLabelGroup = graph.append("svg:g")
-                                .attr("class", "legend-group")
-                                .selectAll("g")
-                                .data(data.displayNames)
-                                .enter()
-                                .append("g")
-                                .attr("class", "legend-labels");
-        
-    legendLabelGroup.append("svg:text")
-                    .attr("class", "legend name")
-                    .text(function(d, i) {
-                      return d;
-                    })
-                    .attr("font-size", legendFontSize)
-                    .attr("fill", function(d, i) {
-                      // return the color for this row
-                      return data.colors[i];
-                    })
-                    .attr("y", function(d, i) {
-                      return h+28;
-                    });
+      .attr("class", "legend-group")
+      .selectAll("g")
+      .data(data.displayNames)
+      .enter()
+      .append("g")
+      .attr("class", "legend-labels");
 
-        
+    legendLabelGroup.append("svg:text")
+      .attr("class", "legend name")
+      .text(function(d, i) {
+        return d;
+      })
+      .attr("font-size", legendFontSize)
+      .attr("fill", function(d, i) {
+        // return the color for this row
+        return data.colors[i];
+      })
+      .attr("y", function(d, i) {
+        return h + 28;
+      });
+
+
     // put in placeholders with 0 width that we'll populate and resize dynamically
     legendLabelGroup.append("svg:text")
-                    .attr("class", "legend value")
-                    .attr("font-size", legendFontSize)
-                    .attr("fill", function(d, i) {
-                      return data.colors[i];
-                    })
-                    .attr("y", function(d, i) {
-                      return h+28;
-                    });
-        
+      .attr("class", "legend value")
+      .attr("font-size", legendFontSize)
+      .attr("fill", function(d, i) {
+        return data.colors[i];
+      })
+      .attr("y", function(d, i) {
+        return h + 28;
+      });
+
     // x values are not defined here since those get dynamically calculated when data is set in displayValueLabelsForPositionX()
   }
-  
+
   var redrawLegendPosition = function(animate) {
     var legendText = graph.selectAll('g.legend-group text');
-    if(animate) {
+    if (animate) {
       legendText.transition()
-                .duration(transitionDuration)
-                .ease("linear")
-                .attr("y", function(d, i) {
-                  return h+28;
-                }); 
-      
+        .duration(transitionDuration)
+        .ease("linear")
+        .attr("y", function(d, i) {
+          return h + 28;
+        });
+
     } else {
       legendText.attr("y", function(d, i) {
-        return h+28;
-      }); 
-    } 
+        return h + 28;
+      });
+    }
   }
-  
+
   /**
    * Create scale buttons for switching the y-axis
    */
   var createScaleButtons = function() {
-    var cumulativeWidth = 0;    
+    var cumulativeWidth = 0;
     // append a group to contain all lines
     var buttonGroup = graph.append("svg:g")
-                           .attr("class", "scale-button-group")
-                           .selectAll("g")
-                           .data(scales)
-                           .enter()
-                           .append("g")
-                           .attr("class", "scale-buttons")
-                           .append("svg:text")
-                           .attr("class", "scale-button")
-                           .text(function(d, i) {
-                             return d[1];
-                           })
-                           .attr("font-size", "12") // this must be before "x" which dynamically determines width
-                           .attr("fill", function(d) {
-                             if(d[0] == yScale) {
-                               return "black";
-                             } else {
-                               return "blue";
-                             }
-                           })
-                           .classed("selected", function(d) {
-                             if(d[0] == yScale) {
-                               return true;
-                             } else {
-                               return false;
-                             }
-                           })
-                           .attr("x", function(d, i) {
-                             // return it at the width of previous labels (where the last one ends)
-                             var returnX = cumulativeWidth;
-                             // increment cumulative to include this one
-                             cumulativeWidth += this.getComputedTextLength()+5;
-                             return returnX;
-                           })
-                           .attr("y", -4)
-                           .on('click', function(d, i) {
-                             handleMouseClickScaleButton(this, d, i);
-                           });
+      .attr("class", "scale-button-group")
+      .selectAll("g")
+      .data(scales)
+      .enter()
+      .append("g")
+      .attr("class", "scale-buttons")
+      .append("svg:text")
+      .attr("class", "scale-button")
+      .text(function(d, i) {
+        return d[1];
+      })
+      .attr("font-size", "12") // this must be before "x" which dynamically determines width
+      .attr("fill", function(d) {
+        if (d[0] == yScale) {
+          return "black";
+        } else {
+          return "blue";
+        }
+      })
+      .classed("selected", function(d) {
+        if (d[0] == yScale) {
+          return true;
+        } else {
+          return false;
+        }
+      })
+      .attr("x", function(d, i) {
+        // return it at the width of previous labels (where the last one ends)
+        var returnX = cumulativeWidth;
+        // increment cumulative to include this one
+        cumulativeWidth += this.getComputedTextLength() + 5;
+        return returnX;
+      })
+      .attr("y", -4)
+      .on('click', function(d, i) {
+        handleMouseClickScaleButton(this, d, i);
+      });
   }
 
   var handleMouseClickScaleButton = function(button, buttonData, index) {
-    if(index == 0) {
+    if (index == 0) {
       self.switchToLinearScale();
-    } else if(index == 1) {
+    } else if (index == 1) {
       self.switchToPowerScale();
-    } else if(index == 2) {
+    } else if (index == 2) {
       self.switchToLogScale();
     }
-    
+
     // change text decoration
     graph.selectAll('.scale-button')
-         .attr("fill", function(d) {
-           if(d[0] == yScale) {
-             return "black";
-           } else {
-             return "blue";
-           }
-         })
-         .classed("selected", function(d) {
-           if(d[0] == yScale) {
-             return true;
-           } else {
-             return false;
-           }
-         })
+      .attr("fill", function(d) {
+        if (d[0] == yScale) {
+          return "black";
+        } else {
+          return "blue";
+        }
+      })
+      .classed("selected", function(d) {
+        if (d[0] == yScale) {
+          return true;
+        } else {
+          return false;
+        }
+      })
   }
-  
+
   /**
    * Create a data label
    */
@@ -819,14 +825,14 @@ function LineGraph(argsMap) {
     var date = new Date(); // placeholder just so we can calculate a valid width
     // create the date label to the left of the scaleButtons group
     var buttonGroup = graph.append("svg:g")
-                           .attr("class", "date-label-group")
-                           .append("svg:text")
-                           .attr("class", "date-label")
-                           .attr("text-anchor", "end") // set at end so we can position at far right edge and add text from right to left
-                           .attr("font-size", "10") 
-                           .attr("y", -4)
-                           .attr("x", w)
-                           .text(date.toDateString() + " " + date.toLocaleTimeString());
+      .attr("class", "date-label-group")
+      .append("svg:text")
+      .attr("class", "date-label")
+      .attr("text-anchor", "end") // set at end so we can position at far right edge and add text from right to left
+      .attr("font-size", "10")
+      .attr("y", -4)
+      .attr("x", w)
+      .text(date.toDateString() + " " + date.toLocaleTimeString());
   }
 
   /**
@@ -834,7 +840,7 @@ function LineGraph(argsMap) {
    */
   var handleMouseOverLine = function(lineData, index) {
     //debug("MouseOver line [" + containerId + "] => " + index)
-    
+
     // user is interacting
     userCurrentlyInteracting = true;
   }
@@ -842,20 +848,20 @@ function LineGraph(argsMap) {
   /**
    * Called when a user mouses over the graph.
    */
-  var handleMouseOverGraph = function(event) {  
-    var mouseX = event.pageX-hoverLineXOffset;
-    var mouseY = event.pageY-hoverLineYOffset;
-    
+  var handleMouseOverGraph = function(event) {
+    var mouseX = event.pageX - hoverLineXOffset;
+    var mouseY = event.pageY - hoverLineYOffset;
+
     //debug("MouseOver graph [" + containerId + "] => x: " + mouseX + " y: " + mouseY + "  height: " + h + " event.clientY: " + event.clientY + " offsetY: " + event.offsetY + " pageY: " + event.pageY + " hoverLineYOffset: " + hoverLineYOffset)
-    if(mouseX >= 0 && mouseX <= w && mouseY >= 0 && mouseY <= h) {
+    if (mouseX >= 0 && mouseX <= w && mouseY >= 0 && mouseY <= h) {
       // show the hover line
       hoverLine.classed("hide", false);
 
       // set position of hoverLine
       hoverLine.attr("x1", mouseX).attr("x2", mouseX);
-      
+
       displayValueLabelsForPositionX(mouseX);
-      
+
       // user is interacting
       userCurrentlyInteracting = true;
       currentUserPositionX = mouseX;
@@ -864,47 +870,47 @@ function LineGraph(argsMap) {
       handleMouseOutGraph(event);
     }
   }
-  
-  var handleMouseOutGraph = function(event) { 
+
+  var handleMouseOutGraph = function(event) {
     // hide the hover-line
     hoverLine.classed("hide", true);
-    
+
     setValueLabelsToLatest();
-    
+
     //debug("MouseOut graph [" + containerId + "] => " + mouseX + ", " + mouseY)
-    
+
     // user is no longer interacting
     userCurrentlyInteracting = false;
     currentUserPositionX = -1;
   }
-  
-/*  // if we need to support older browsers without pageX/pageY we can use this
-  var getMousePositionFromEvent = function(e, element) {
-    var posx = 0;
-    var posy = 0;
-    if (!e) var e = window.event;
-    if (e.pageX || e.pageY)   {
-      posx = e.pageX;
-      posy = e.pageY;
+
+  /*  // if we need to support older browsers without pageX/pageY we can use this
+    var getMousePositionFromEvent = function(e, element) {
+      var posx = 0;
+      var posy = 0;
+      if (!e) var e = window.event;
+      if (e.pageX || e.pageY)   {
+        posx = e.pageX;
+        posy = e.pageY;
+      }
+      else if (e.clientX || e.clientY)  {
+        posx = e.clientX + document.body.scrollLeft
+          + document.documentElement.scrollLeft;
+        posy = e.clientY + document.body.scrollTop
+          + document.documentElement.scrollTop;
+      }
+      
+      return {x: posx, y: posy};
     }
-    else if (e.clientX || e.clientY)  {
-      posx = e.clientX + document.body.scrollLeft
-        + document.documentElement.scrollLeft;
-      posy = e.clientY + document.body.scrollTop
-        + document.documentElement.scrollTop;
-    }
-    
-    return {x: posx, y: posy};
-  }
-*/
-  
-  /*
-  * Handler for when data is updated.
   */
+
+  /*
+   * Handler for when data is updated.
+   */
   var handleDataUpdate = function() {
-    if(userCurrentlyInteracting) {
+    if (userCurrentlyInteracting) {
       // user is interacting, so let's update values to wherever the mouse/finger is on the updated data
-      if(currentUserPositionX > -1) {
+      if (currentUserPositionX > -1) {
         displayValueLabelsForPositionX(currentUserPositionX);
       }
     } else {
@@ -912,14 +918,14 @@ function LineGraph(argsMap) {
       setValueLabelsToLatest();
     }
   }
-  
+
   /**
-  * Display the data values at position X in the legend value labels.
-  */
+   * Display the data values at position X in the legend value labels.
+   */
   var displayValueLabelsForPositionX = function(xPosition, withTransition) {
     var animate = false;
-    if(withTransition != undefined) {
-      if(withTransition) {
+    if (withTransition != undefined) {
+      if (withTransition) {
         animate = true;
       }
     }
@@ -927,41 +933,41 @@ function LineGraph(argsMap) {
     var dateToShow;
     var labelValueWidths = [];
     graph.selectAll("text.legend.value")
-         .text(function(d, i) {
-           var valuesForX = getValueForPositionXFromData(xPosition, i);
-           dateToShow = valuesForX.date;
-           return valuesForX.value;
-         })
-         .attr("x", function(d, i) {
-           labelValueWidths[i] = this.getComputedTextLength();
-         });
+      .text(function(d, i) {
+        var valuesForX = getValueForPositionXFromData(xPosition, i);
+        dateToShow = valuesForX.date;
+        return valuesForX.value;
+      })
+      .attr("x", function(d, i) {
+        labelValueWidths[i] = this.getComputedTextLength();
+      });
 
     // position label names
     var cumulativeWidth = 0;
     var labelNameEnd = [];
     graph.selectAll("text.legend.name")
-         .attr("x", function(d, i) {
-           // return it at the width of previous labels (where the last one ends)
-           var returnX = cumulativeWidth;
-           // increment cumulative to include this one + the value label at this index
-           cumulativeWidth += this.getComputedTextLength()+4+labelValueWidths[i]+8;
-           // store where this ends
-           labelNameEnd[i] = returnX + this.getComputedTextLength()+5;
-           return returnX;
-         });
+      .attr("x", function(d, i) {
+        // return it at the width of previous labels (where the last one ends)
+        var returnX = cumulativeWidth;
+        // increment cumulative to include this one + the value label at this index
+        cumulativeWidth += this.getComputedTextLength() + 4 + labelValueWidths[i] + 8;
+        // store where this ends
+        labelNameEnd[i] = returnX + this.getComputedTextLength() + 5;
+        return returnX;
+      });
 
     // remove last bit of padding from cumulativeWidth
     cumulativeWidth = cumulativeWidth - 8;
 
-    if(cumulativeWidth > w) {
+    if (cumulativeWidth > w) {
       // decrease font-size to make fit
-      legendFontSize = legendFontSize-1;
+      legendFontSize = legendFontSize - 1;
       //debug("making legend fit by decreasing font size to: " + legendFontSize)
       graph.selectAll("text.legend.name")
-           .attr("font-size", legendFontSize);
+        .attr("font-size", legendFontSize);
       graph.selectAll("text.legend.value")
-           .attr("font-size", legendFontSize);
-      
+        .attr("font-size", legendFontSize);
+
       // recursively call until we get ourselves fitting
       displayValueLabelsForPositionX(xPosition);
       return;
@@ -969,52 +975,57 @@ function LineGraph(argsMap) {
 
     // position label values
     graph.selectAll("text.legend.value")
-         .attr("x", function(d, i) {
-           return labelNameEnd[i];
-         });
-    
+      .attr("x", function(d, i) {
+        return labelNameEnd[i];
+      });
+
     // show the date
     graph.select('text.date-label')
-         .text(dateToShow.toDateString() + " " + dateToShow.toLocaleTimeString());
+      .text(dateToShow.toDateString() + " " + dateToShow.toLocaleTimeString());
 
     // move the group of labels to the right side
-    if(animate) {
+    if (animate) {
       graph.selectAll("g.legend-group g")
-           .transition()
-           .duration(transitionDuration)
-           .ease("linear")
-           .attr("transform", "translate(" + (w-cumulativeWidth) +",0)");
+        .transition()
+        .duration(transitionDuration)
+        .ease("linear")
+        .attr("transform", "translate(" + (w - cumulativeWidth) + ",0)");
     } else {
       graph.selectAll("g.legend-group g")
-           .attr("transform", "translate(" + (w-cumulativeWidth) +",0)");
+        .attr("transform", "translate(" + (w - cumulativeWidth) + ",0)");
     }
   }
-  
+
   /**
-  * Set the value labels to whatever the latest data point is.
-  */
+   * Set the value labels to whatever the latest data point is.
+   */
   var setValueLabelsToLatest = function(withTransition) {
     displayValueLabelsForPositionX(w, withTransition);
   }
-  
+
   /**
-  * Convert back from an X position on the graph to a data value from the given array (one of the lines)
-  * Return {value: value, date: date}
-  */
+   * Convert back from an X position on the graph to a data value from the given array (one of the lines)
+   * Return {value: value, date: date}
+   */
   var getValueForPositionXFromData = function(xPosition, dataSeriesIndex) {
     var xValue = x.invert(xPosition);
-    var bisectDate = d3.bisector(function(d) { return d.date; }).left;
-    var i = bisectDate(data.values[dataSeriesIndex],xValue);
+    var bisectDate = d3.bisector(function(d) {
+      return d.date;
+    }).left;
+    var i = bisectDate(data.values[dataSeriesIndex], xValue);
     if (i === 0) {
       i = 1;
     }
-    var d0 = data.values[dataSeriesIndex][i-1];
+    var d0 = data.values[dataSeriesIndex][i - 1];
     //console.log("d0: " + JSON.stringify(d0));
 
-    return {value: d0.value, date: new Date(d0.date)};
+    return {
+      value: d0.value,
+      date: new Date(d0.date)
+    };
   }
 
-  
+
   /**
    * Called when the window is resized to redraw graph accordingly.
    */
@@ -1022,7 +1033,7 @@ function LineGraph(argsMap) {
     //debug("Window Resize Event [" + containerId + "] => resizing graph")
     initDimensions();
     initX();
-    
+
     // reset width/height of SVG
     d3.select("#" + containerId + " svg")
       .attr("width", w + margin[1] + margin[3])
@@ -1030,36 +1041,36 @@ function LineGraph(argsMap) {
 
     // reset transform of x axis
     graph.selectAll("g .x.axis")
-         .attr("transform", "translate(0," + h + ")");
-      
-    if(yAxisRight != undefined) {
+      .attr("transform", "translate(0," + h + ")");
+
+    if (yAxisRight != undefined) {
       // Reset the y-axisRight transform if it exists
       graph.selectAll("g .y.axis.right")
-           .attr("transform", "translate(" + (w+10) + ",0)");
+        .attr("transform", "translate(" + (w + 10) + ",0)");
     }
 
     // reset legendFontSize on window resize so it has a chance to re-calculate to a bigger size if it can now fit 
     legendFontSize = 12;
     //debug("making legend fit by decreasing font size to: " + legendFontSize)
     graph.selectAll("text.legend.name")
-         .attr("font-size", legendFontSize);
+      .attr("font-size", legendFontSize);
     graph.selectAll("text.legend.value")
-         .attr("font-size", legendFontSize);
+      .attr("font-size", legendFontSize);
 
     // move date label
     graph.select('text.date-label')
-         .transition()
-         .duration(transitionDuration)
-         .ease("linear")
-         .attr("x", w);
+      .transition()
+      .duration(transitionDuration)
+      .ease("linear")
+      .attr("x", w);
 
     // redraw the graph with new dimensions
     redrawAxes(true);
     redrawLines(true);
-    
+
     // reposition legend if necessary
     redrawLegendPosition(true);
-        
+
     // force legend to redraw values
     setValueLabelsToLatest(true);
   }
@@ -1071,18 +1082,18 @@ function LineGraph(argsMap) {
     // automatically size to the container using JQuery to get width/height
     w = $("#" + containerId).width() - margin[1] - margin[3]; // width
     h = $("#" + containerId).height() - margin[0] - margin[2]; // height
-    
+
     // make sure to use offset() and not position() as we want it relative to the document, not its parent
-    hoverLineXOffset = margin[3]+$(container).offset().left;
-    hoverLineYOffset = margin[0]+$(container).offset().top;
+    hoverLineXOffset = margin[3] + $(container).offset().left;
+    hoverLineYOffset = margin[0] + $(container).offset().top;
   }
-  
+
   /**
-  * Return the value from argsMap for key or throw error if no value found
-  */    
+   * Return the value from argsMap for key or throw error if no value found
+   */
   var getRequiredVar = function(argsMap, key, message) {
-    if(!argsMap[key]) {
-      if(!message) {
+    if (!argsMap[key]) {
+      if (!message) {
         throw new Error(key + " is required");
       } else {
         throw new Error(message);
@@ -1091,18 +1102,18 @@ function LineGraph(argsMap) {
       return argsMap[key];
     }
   }
-  
+
   /**
-  * Return the value from argsMap for key or defaultValue if no value found
-  */
+   * Return the value from argsMap for key or defaultValue if no value found
+   */
   var getOptionalVar = function(argsMap, key, defaultValue) {
-    if(!argsMap[key]) {
+    if (!argsMap[key]) {
       return defaultValue;
     } else {
       return argsMap[key];
     }
   }
-  
+
   var error = function(message) {
     console.log("ERROR: " + message);
   }
@@ -1110,25 +1121,25 @@ function LineGraph(argsMap) {
   var debug = function(message) {
     console.log("DEBUG: " + message);
   }
-  
+
   /* round a number to X digits: num => the number to round, dec => the number of decimals */
   /* private */
   function roundNumber(num, dec) {
-    var result = Math.round(num*Math.pow(10,dec))/Math.pow(10,dec);
+    var result = Math.round(num * Math.pow(10, dec)) / Math.pow(10, dec);
     var resultAsString = result.toString();
-    if(dec > 0) {
-      if(resultAsString.indexOf('.') == -1) {
+    if (dec > 0) {
+      if (resultAsString.indexOf('.') == -1) {
         resultAsString = resultAsString + '.';
       }
       // make sure we have a decimal and pad with 0s to match the number we were asked for
       var indexOfDecimal = resultAsString.indexOf('.');
-      while(resultAsString.length <= (indexOfDecimal+dec)) {
+      while (resultAsString.length <= (indexOfDecimal + dec)) {
         resultAsString = resultAsString + '0';
       }
     }
     return resultAsString;
   };
-  
+
   /* *************************************************************** */
   /* execute init now that everything is defined */
   /* *************************************************************** */

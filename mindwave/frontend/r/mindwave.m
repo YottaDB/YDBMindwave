@@ -19,9 +19,9 @@ get(user,start,limit)
  . . quit
  . ;
  . ; return the document
- . merge @results@("Mindwave",numberOfDocuments)=^MindWave(user,document)
+ . merge @results@("Mindwave")=^MindWave(user,document)
 
- set @results@("metadata","TotalItems")=$get(^MindWave(user,"count"))
- set @results@("metadata","Items")=$g(numberOfDocuments)+1
- set @results@("metadata","ItemsRemaining")=$get(^MindWave(user,"count"))-($g(numberOfDocuments)+1+start)
+ set @results@("Mindwave","metadata","TotalItems")=$get(^MindWave(user,"count"))
+ set @results@("Mindwave","metadata","Items")=$g(numberOfDocuments)+1
+ set @results@("Mindwave","metadata","ItemsRemaining")=$get(^MindWave(user,"count"))-($g(numberOfDocuments)+1+start)
  quit results

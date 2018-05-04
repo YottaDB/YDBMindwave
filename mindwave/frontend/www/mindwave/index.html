@@ -126,7 +126,7 @@
         }
       };
 
-      xhttp.open("GET", "/api/db/MindWave/list?showDetail=true",true);
+      xhttp.open("GET", "/api/db/MindWave/list?showDetail=true&start=" + totalItems + "&limit=65",true);
       xhttp.send();
 
       setInterval(function() {

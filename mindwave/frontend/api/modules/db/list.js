@@ -30,15 +30,15 @@
 */
 
 module.exports = function(documentName, docSubName, showDetail, start, limit) {
-  start = parseInt(start);
-  limit = parseInt(limit);
+  start = parseInt(start ? start : 0);
+  limit = parseInt(limit ? limit : 0);
 
   var tempGlobal = this.db.use('CacheTemp', [process.pid,"Mindwave"]);
-  var metadata = this.db.use('CacheTemp', [process.pid,"metadata"]);
+  //var metadata = this.db.use('CacheTemp', [process.pid,"metadata"]);
 
   // make sure the globals we use are cleaned up
   tempGlobal.delete();
-  metadata.delete();
+  //metadata.delete();
 
   // do all the logic on the m side as it is much faster
   this.db.function({
@@ -47,7 +47,7 @@ module.exports = function(documentName, docSubName, showDetail, start, limit) {
   });
 
   // get the results of the m function above
-  var result = tempGlobal.getDocument(true);
+  var result = tempGlobal.getDocument();
   
   // do a deep clone of result to results so that the push of new
   // data works as intended
@@ -57,11 +57,11 @@ module.exports = function(documentName, docSubName, showDetail, start, limit) {
   // we do this as a separate step so that qewd treats
   // result as an array (when it encounters a non-numeric
   // key it returns an object instead of an array)
-  results.push({"metadata": metadata.getDocument()});
+  //results.push({"metadata": metadata.getDocument()});
 
   // remove the results of the m function as cleanup
   tempGlobal.delete();
-  metadata.delete();
+  //metadata.delete();
 
   return results;
 };

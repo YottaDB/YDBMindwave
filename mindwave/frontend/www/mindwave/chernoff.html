@@ -98,15 +98,15 @@
             .brow(function(d) { return d.b; });
       svg = d3.select("#face")
               .append("svg:svg")
-              .attr("height", 480)
-              .attr("width", 640),
+              .attr("height", 400)
+              .attr("width", 600),
               dat = [
                       {f: 0, h: 0, m: mouthValue, nw: 1, nh: 1, ew: 1, eh: 1, b: browValue}
               ];
       svg.selectAll("g.chernoff").data(dat).enter()
          .append("svg:g")
          .attr("class", "chernoff")
-         .attr("transform", "scale(3.5) translate(-5,-32)")
+         .attr("transform", "scale(2.8) translate(-5,-32)")
          .call(c);
       })();
 
@@ -139,7 +139,7 @@
                .data(data)
                .enter().append("svg:g")
                .attr("class", "chernoff")
-               .attr("transform", "scale(3.5) translate(-5,-32)")
+               .attr("transform", "scale(2.8) translate(-5,-32)")
                .call(c);
             }
         };

@@ -13,132 +13,197 @@
  * -->
 
 <html>
-    <head>
-        <title>YottaDB MindWave IoT Demo</title>
-        <script src="http://d3js.org/d3.v2.js"></script>
-        <!-- 
-            using JQuery for element dimensions
-            This is a small aspect of this example so it can be removed fairly easily if needed.
-        -->
-        <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.21.0/moment.min.js"></script>
-        <script src="sample_data.js"></script>
-        <script src="line-graph2.js"></script>
-        <script src="mindwave.js"></script>
-        <link rel="stylesheet" href="style.css" type="text/css">
-        <style>
-            body {
-                font-family: "Helvetica Neue", Helvetica;
-            }
-                    
-            p {
-                clear:both;
-                top: 20px;
-            }       
-                    
-            div.aGraph {
-                margin-bottom: 30px;
-            }
-        </style>
-    </head>
-    <body>
-        <div id="eegGraph" class="aGraph" style="position:relative;width:100%;height:300px"></div>
-        <div id="eegAlpha" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
-        <div id="eegBeta" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
-        <div id="eegGamma" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
-        <div id="eegTheta" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
-        <div id="eegDelta" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
-        <div id="attentionMeditation" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+  <head>
+    <title>YottaDB MindWave IoT Demo</title>
+    <script src="js/d3.v2.js"></script>
+    <script src="js/jquery-1.7.2.min.js"></script>
+    <script src="js/underscore1.8.3-min.js"></script>
+    <script src="js/moment2.21.0.min.js"></script>
+    <script src="sample_data.js"></script>
+    <script src="line-graph2.js"></script>
+    <script src="mindwave.js"></script>
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+    <link rel="stylesheet" href="css/yottadb.css" type="text/css"/>
+    <style>   
+      div.aGraph {
+        margin-bottom: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="header" class="home-page">
+      <div class="container" id="main-header">
+        <div class="row" id="navholder">
+          <div class="col-md-6 col-sm-8" id="main-logo">
+            <a href="https://yottadb.com">
+              <img src="img/YottaDB_logo.svg" alt="YottaDB">
+            </a>
+          </div>
+          <nav class="col-md-18 col-sm-16" id="main-nav">
+            <div id="auxnav">
+              <div id="nav_auxmenu" class="nav">
+                <ul id="menu-aux-nav" class="menu">
+                  <li id="menu-item-29" class="gray menu-item menu-item-type-custom menu-item-object-custom menu-item-29">
+                    <a href="https://yottadb.com/about-us/contact/">Contact Us</a>
+                  </li>
+                  <li id="menu-item-30" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-30">
+                    <a target="_blank" href="https://yottadb.com/product/get-started/">Download</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <ul id="menu-main-menu" class="menu">
+              <li id="menu-item-63" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-63">
+                <a href="https://yottadb.com/product/">MindWave Demos</a>
+                <ul class="sub-menu">
+                  <li id="menu-item-65" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-65">
+                    <a href="//mindwave/index.html">Data Graphs</a>
+                  </li>
+                  <li id="menu-item-66" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-66">
+                    <a href="//mindwave/chernoff.html">Chernoff Faces</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </header>
+    <div id="eegGraph" class="aGraph" style="position:relative;width:100%;height:300px"></div>
+    <div id="eegAlpha" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+    <div id="eegBeta" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+    <div id="eegGamma" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+    <div id="eegTheta" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+    <div id="eegDelta" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+    <div id="attentionMeditation" class="aGraph" style="float:left;position:relative;width:49%;height:200px"></div>
+    
+    <script>
+      /*
+       * Note how the 'data' object is added to here before rendering to provide decoration information.
+       * <p>
+       * This is purposefully done here instead of in data.js as an example of how data would come from a server
+       * and then have presentation information injected into it (rather than as separate arguments in another object)
+       * and passed into LineGraph.
+       *
+       * Also, CSS can be used to style colors etc, but this is also doable via the 'data' object so that the styling
+       * of different data points can be done in code which is often more natural for display names, legends, line colors etc
+      */
+      // message mindwave data to be compatible:
+      var eegData,alphaData,betaData,gammaData,thetaData,deltaData,attentionData,meditationData,attentionMeditationData, totalItems, prevTotalItems, skippedIterations;
 
-        <script>
-            /*
-             * Note how the 'data' object is added to here before rendering to provide decoration information.
-             * <p>
-             * This is purposefully done here instead of in data.js as an example of how data would come from a server
-             * and then have presentation information injected into it (rather than as separate arguments in another object)
-             * and passed into LineGraph.
-             *
-             * Also, CSS can be used to style colors etc, but this is also doable via the 'data' object so that the styling
-             * of different data points can be done in code which is often more natural for display names, legends, line colors etc
-            */
-            // message mindwave data to be compatible:
-            var eegData,alphaData,betaData,gammaData,thetaData,deltaData,attentionData,meditationData,attentionMeditationData, totalItems, prevTotalItems, skippedIterations;
+      totalItems = 0;
+      prevTotalItems = 0;
+      skippedIterations = 0;
 
-            totalItems = 0;
-            prevTotalItems = 0;
-            skippedIterations = 0;
+      resetMindWaveData();
+      parseMindWaveData(mindWaveData);
+      
+      // create graph now that we've added presentation config
+      var l1 = new LineGraph({containerId: 'eegGraph', data: eegData});
+      var l2 = new LineGraph({containerId: 'eegAlpha', data: alphaData});
+      var l3 = new LineGraph({containerId: 'eegBeta', data: betaData});
+      var l4 = new LineGraph({containerId: 'eegGamma', data: gammaData});
+      var l5 = new LineGraph({containerId: 'eegTheta', data: thetaData});
+      var l6 = new LineGraph({containerId: 'eegDelta', data: deltaData});
+      var l7 = new LineGraph({containerId: 'attentionMeditation', data: attentionMeditationData});
+      
+      // Request data from the API
+      var xhttp = new XMLHttpRequest();
+      var xhttpResponse;
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          xhttpResponse = JSON.parse(this.responseText);
+          resetMindWaveData();
+          console.log("parsing MindWave Data");
+          parseMindWaveData(xhttpResponse);
+          l1.updateData(eegData);
+          l2.updateData(alphaData);
+          l3.updateData(betaData);
+          l4.updateData(gammaData);
+          l5.updateData(thetaData);
+          l6.updateData(deltaData);
+          l7.updateData(attentionMeditationData);
+        }
+      };
+
+      xhttp.open("GET", "/api/db/MindWave/list?showDetail=true&start=" + totalItems + "&limit=65",true);
+      xhttp.send();
+
+      setInterval(function() {
+        // get the data
+        var intervalXhttp = new XMLHttpRequest();
+        var intervalXhttpResponse;
+        intervalXhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            intervalXhttpResponse = JSON.parse(this.responseText);
 
             resetMindWaveData();
-            parseMindWaveData(mindWaveData);
-            
-            // create graph now that we've added presentation config
-            var l1 = new LineGraph({containerId: 'eegGraph', data: eegData});
-            var l2 = new LineGraph({containerId: 'eegAlpha', data: alphaData});
-            var l3 = new LineGraph({containerId: 'eegBeta', data: betaData});
-            var l4 = new LineGraph({containerId: 'eegGamma', data: gammaData});
-            var l5 = new LineGraph({containerId: 'eegTheta', data: thetaData});
-            var l6 = new LineGraph({containerId: 'eegDelta', data: deltaData});
-            var l7 = new LineGraph({containerId: 'attentionMeditation', data: attentionMeditationData});
-            
-            // Request data from the API
-            var xhttp = new XMLHttpRequest();
-            var xhttpResponse;
-            xhttp.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
-                            xhttpResponse = JSON.parse(this.responseText);
-                            resetMindWaveData();
-                            console.log("parsing MindWave Data");
-                            parseMindWaveData(xhttpResponse);
-                            l1.updateData(eegData);
-                            l2.updateData(alphaData);
-                            l3.updateData(betaData);
-                            l4.updateData(gammaData);
-                            l5.updateData(thetaData);
-                            l6.updateData(deltaData);
-                            l7.updateData(attentionMeditationData);
-                    }
-            };
+            parseMindWaveData(intervalXhttpResponse);
+                          
+            l1.slideData(eegData);
+            l2.slideData(alphaData);
+            l3.slideData(betaData);
+            l4.slideData(gammaData);
+            l5.slideData(thetaData);
+            l6.slideData(deltaData);
+            l7.slideData(attentionMeditationData);
+          }
+        };
+        if (totalItems && (totalItems !== prevTotalItems) || (skippedIterations>3)) {
+          prevTotalItems = totalItems;
+          skippedIterations = 0;
+          intervalXhttp.open("GET", "/api/db/MindWave/list?showDetail=true&start=" + totalItems + "&limit=5",true);
+          intervalXhttp.send();
+        }
+        else {
+          console.log("skipping iteration");
+          skippedIterations++;
+        }
+      }, 1000); 
+    </script>
 
-            xhttp.open("GET", "/api/db/MindWave/list?showDetail=true",true);
-            xhttp.send();
 
-            setInterval(function() {
-              /*
-              * The following will simulate live updating of the data (see dataA, dataB, dataC etc in data.js which are real examples)
-              * This is being simulated so this example functions standalone without a backend server which generates data such as data.js contains.
-              */
-
-              // get the data
-              var intervalXhttp = new XMLHttpRequest();
-              var intervalXhttpResponse;
-              intervalXhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                  intervalXhttpResponse = JSON.parse(this.responseText);
-
-                  resetMindWaveData();
-                  parseMindWaveData(intervalXhttpResponse);
-                                
-                  l1.slideData(eegData);
-                  l2.slideData(alphaData);
-                  l3.slideData(betaData);
-                  l4.slideData(gammaData);
-                  l5.slideData(thetaData);
-                  l6.slideData(deltaData);
-                  l7.slideData(attentionMeditationData);
-                }
-              };
-              if (totalItems && (totalItems !== prevTotalItems) || (skippedIterations>3)) {
-                prevTotalItems = totalItems;
-                skippedIterations = 0;
-                intervalXhttp.open("GET", "/api/db/MindWave/list?showDetail=true&start=" + totalItems + "&limit=5",true);
-                intervalXhttp.send();
-              }
-              else {
-                console.log("skipping iteration");
-                skippedIterations++;
-              }
-            }, 1000); 
-        </script>
-    </body>
+    <footer class="inside-page-footer">
+      <div id="footer_top">
+        <div class="brg_shape_1" id="footer-brg_shape" data-stellar-ratio="1.5"></div>
+        <div class="container content-holder">
+          <div class="row" id="social-footer">
+            <div class="col-sm-16 col-sm-offset-4" id="social-holder">
+              <a href="https://stackoverflow.com/search?q=yottadb" target="_blank">
+                <img src="img/stackoverflow.png" alt="Stack Overflow">
+              </a>
+              <a href="https://github.com/YottaDB" target="_blank">
+                <img src="img/github.png" alt="GitHub">
+              </a>
+              <a href="https://twitter.com/YottaDB" target="_blank">
+                <img src="img/twitter.png" alt="Twitter">
+              </a>
+              <a href="https://www.linkedin.com/company/yottadb/" target="_blank">
+                <img src="img/linkedin.png" alt="LinkedIn">
+              </a>
+            </div>
+          </div>
+          <div class="row" id="footer-copyright">
+            <div class="col-sm-16 col-sm-offset-4">
+              © 2018 YottaDB, LLC. All Rights Reserved.
+              <ul id="menu-footer-menu" class="menu">
+                <li id="menu-item-458" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-458">
+                  <a href="https://yottadb.com/about-us/privacy-policy/">Privacy</a>
+                </li>
+                <li id="menu-item-459" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-459">
+                  <a href="https://yottadb.com/about-us/terms-of-use/">Terms</a>
+                </li>
+                <li id="menu-item-460" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-460">
+                  <a href="https://yottadb.com/about-us/copyright-statement/">Copyright</a>
+                </li>
+                <li id="menu-item-461" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-461">
+                  <a href="https://yottadb.com/product/license/">License</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
 </html>

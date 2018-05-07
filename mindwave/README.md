@@ -6,7 +6,7 @@ The MindWave demo uses a NeuroSky MindWave device and a Raspberry Pi as a Intern
 ## Requirements:
 
  * [Raspberry Pi 3](http://www.newark.com/raspberry-pi/2773729/sbc-arm-cortex-a53-1gb-sdram/dp/49AC7637)/[Raspberry Pi Zero W](https://www.adafruit.com/product/3400) - Bluetooth support is required to communicate with the MindWave
- * [NeuroSky MindWave Mobile](https://www.amazon.com/NeuroSky-80013-001-MindWave-Headset/dp/B00A2UQUXY/)
+ * NeuroSky MindWave Mobile
  * 8GiB SD card for [Raspbian OS](https://www.raspberrypi.org/downloads/raspbian/) - Your decision on desktop support vs no desktop, no desktop recommended for Raspberry Pi Zero W
 
 ## Directions:
@@ -50,7 +50,7 @@ The author is using a Raspberry Pi Zero W without the desktop for documentation 
      * Username: pi
      * Password: «Your new password»
  12. Install YottaDB (backend & frontend)
-     * Type: `curl -s -L https://raw.githubusercontent.com/YottaDB/YottaDB/master/sr_unix/ydbinstall.sh -o ydbinstall`
+     * Type: `curl -fsSL https://raw.githubusercontent.com/YottaDB/YottaDB/master/sr_unix/ydbinstall.sh -o ydbinstall`
      * Type: `chmod +x ydbinstall`
      * Type: `sudo ./ydbinstall --utf8 default`
      * Type: `sudo ln -s $(ls -1 /usr/local/lib/yottadb) /usr/local/lib/yottadb/current`
@@ -67,8 +67,9 @@ The author is using a Raspberry Pi Zero W without the desktop for documentation 
      * Type: `source "$NVM_DIR/nvm.sh"`
      * Type: `nvm install --lts`
  15. Setup MindWave IoT database (backend)
-     * Type: `cd YottaDBDemos/mindwave/backend`
+     * Type: `cd ~/Projects/YottaDBDemos/mindwave/backend`
      * Type: `source ydbenv`
+     * Type: `npm install`
      * Type: `mumps -run GDE < gde`
      * Type: `mupip create`
  16. Pair MindWave device (backend)
@@ -85,7 +86,6 @@ The author is using a Raspberry Pi Zero W without the desktop for documentation 
      * Type: `sudo rfcomm bind /dev/rfcomm0 «your MindWave MAC address» 1`
  17. Install & Start the MindWave process (backend)
      * Type: `cd ~/Projects/YottaDBDemos/mindwave/backend`
-     * Type: `npm install`
      * Type: `node index.js`
  18. Install QEWD (frontend)
      * Note: This can be done on either the same machine or a different one depending on your configuration
@@ -119,3 +119,53 @@ The author is using a Raspberry Pi Zero W without the desktop for documentation 
      * Type: `./replication_start`
      * Type: `node qewd-ydb.js`
      Open http://«your Pi Zero IP address»:8080/mindwave/ in your web browser
+
+# Self Contained Demo
+
+The entire demo can be put on a Raspberry Pi Zero (both front and backend) with a 2.8" LCD screen attached to the header pins and configured as an access point to be used at conferences, etc.
+
+This requires the normal rapbian image with a gui vs stretch lite.
+
+## Additional item
+
+ * [iUniker 2.8" Raspberry Pi Zero Touchscreen](https://www.amazon.com/Raspberry-iUniker-2-8-inch-Resolution-Touchscreen/dp/B07567M2NW)
+
+## Directions
+
+ * Download the modules for [kernel 4.9 and above](http://bit.ly/2CLcBU3)
+ * Copy all `*.dtb` files to the boot volume (replace any existing files that are there)
+ * Copy `config.txt` to the boot volume
+ * Copy `mzdpi.dtbo` to the overlays directory on the boot volume
+ * Follow main directions above to get the demo working
+ * Add the following to `/etc/rc.local`
+   ```
+   # Start mindwave backend
+   cd /home/pi/Projects/YottaDBDemos/mindwave/backend/
+   su pi -c ./mindwave_start
+   cd /home/pi/Projects/YottaDBDemos/mindwave/frontend/
+   su pi -c ./mindwave_start
+   ```
+ * Add the following to `/home/pi/.config/lxsession/LXDE-pi/autostart`
+   ```
+   @chromium-browser --kiosk http://localhost:8080/mindwave/chernoff.html
+   ```
+ * Move wifi configuration to a backup file as it can't be used when running as an access point
+   * Type: `sudo mv /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf.old`
+ * [Setup the Raspberry Pi Zero as an access point](https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md)
+ * Modify chrome preferences so that it doesn't want to restore pages on starup:
+   * Type: `vi ~/.config/chromium/Default/Preferences`
+   * Search for: `exit_type`
+   * Make sure that the value (in JSON format) for `exit_type` is `none`
+   * Make sure that the value for `exited_cleanly` is `true`
+   * Save and quit
+   * Type: `chmod ugo-w ~/.config/chromium/Default/Preferences`
+
+ To reset wifi to being a client:
+  * Type: `sudo mv /etc/wpa_supplicant/wpa_supplicant.conf.old /etc/wpa_supplicant/wpa_supplicant.conf`
+  * Type: `sudo systemctl disable dnsmasq`
+  * Type: `sudo systemctl disable hostapd`
+  * Comment out static ip address:
+    * Type `sudo vi /etc/dhcpcd.conf`
+    * Comment out with a `#` `interface wlan0`
+    * Comment out with a `#` `static ip_address=192.168.4.1/24`
+  * Reboot the raspberry pi `sudo reboot`

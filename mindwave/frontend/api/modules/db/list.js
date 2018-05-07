@@ -29,64 +29,39 @@
 
 */
 
-
 module.exports = function(documentName, docSubName, showDetail, start, limit) {
-  if (showDetail === 'true') {
-    showDetail = true;
-  }
+  start = parseInt(start ? start : 0);
+  limit = parseInt(limit ? limit : 0);
 
-  if (!start) {
-    start=0;
-  }
+  var tempGlobal = this.db.use('CacheTemp', [process.pid,"Mindwave"]);
+  //var metadata = this.db.use('CacheTemp', [process.pid,"metadata"]);
 
-  if (!limit) {
-    limit=0;
-  }
+  // make sure the globals we use are cleaned up
+  tempGlobal.delete();
+  //metadata.delete();
 
-  start = parseInt(start);
-  limit = parseInt(limit);
-  if (typeof docSubName === 'undefined' || docSubName === '') {
-    return {error: 'Document name not defined or empty'};
-  }
-
-  var doc = this.db.use('MindWave', 1);
-
-  if (!doc.exists) {
-    return {error: 'No ' + documentName + ' Documents exist'};
-  }
-
-  var results = [];
-
-  if (showDetail) {
-    results = {};
-  }
-
-  var numberOfDocs=0;
-  doc.forEachChild(function(id, node) {
-    numberOfDocs++;
-
-    // skip loop iteration if we are given a range of documents to retrive
-    // and we are below the start count
-    if (numberOfDocs <= start) {
-      return;
-    }
-
-    // we have returned enough documents, don't continue the loop
-    if ((limit !== 0) && (numberOfDocs >= limit+start+1)) {
-      return;
-    }
-
-    // get the document
-    if (showDetail) {
-      results[id] = node.getDocument(true);
-    }
-    else {
-      results.push(id);
-    }
+  // do all the logic on the m side as it is much faster
+  this.db.function({
+    function: 'get^mindwave',
+    arguments: [1,start,limit]
   });
-  results.metadata = {};
-  results.metadata.TotalItems = numberOfDocs;
-  results.metadata.Items = (limit ? limit : numberOfDocs-(limit+start));
-  results.metadata.ItemsRemaining = (limit ? numberOfDocs-(limit+start) : 0);
+
+  // get the results of the m function above
+  var result = tempGlobal.getDocument();
+  
+  // do a deep clone of result to results so that the push of new
+  // data works as intended
+  var results = JSON.parse(JSON.stringify(result));
+
+  // get the metadata and push it as an array element
+  // we do this as a separate step so that qewd treats
+  // result as an array (when it encounters a non-numeric
+  // key it returns an object instead of an array)
+  //results.push({"metadata": metadata.getDocument()});
+
+  // remove the results of the m function as cleanup
+  tempGlobal.delete();
+  //metadata.delete();
+
   return results;
 };

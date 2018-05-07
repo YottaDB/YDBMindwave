@@ -11,11 +11,16 @@ console.log("Starting MindWave Process...")
 mw.on('eeg', function(eeg) {
   var node, ret;
   var date = new Date().getTime();
+  
+  var index = db.increment({
+    global: 'MindWave',
+    subscripts: [deviceId,"count"]
+  }).data;
 
   _.each(eeg, function(value, key) {
     node = {
       global: 'MindWave',
-      subscripts: [deviceId, date, key],
+      subscripts: [deviceId, index, date, key],
       data: value
     };
     ret = db.set(node);
@@ -27,9 +32,14 @@ mw.on('attention', function(attention) {
     var node, ret
     var date = new Date().getTime();
     
+    var index = db.increment({
+    global: 'MindWave',
+    subscripts: [deviceId,"count"]
+    }).data;
+
     node = {
       global: 'MindWave',
-      subscripts: [deviceId, date, 'attention'],
+      subscripts: [deviceId, index, date, 'attention'],
       data: attention
     };
     ret = db.set(node);
@@ -42,9 +52,14 @@ mw.on('meditation', function(meditation) {
     var ret;
     var date = new Date().getTime();
 
+    var index = db.increment({
+    global: 'MindWave',
+    subscripts: [deviceId,"count"]
+    }).data;
+
     node = {
       global: 'MindWave',
-      subscripts: [deviceId, date, 'meditation'],
+      subscripts: [deviceId, index, date, 'meditation'],
       data: meditation
     };
     ret = db.set(node);

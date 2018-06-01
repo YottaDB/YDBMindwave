@@ -13,6 +13,8 @@ The MindWave demo uses a NeuroSky MindWave device and a Raspberry Pi as a Intern
 
 The author is using a Raspberry Pi Zero W without the desktop for documentation purposes
 
+Backend Installation:
+
  1. Download [Raspbian Stretch Lite](https://downloads.raspberrypi.org/raspbian_lite_latest) to your machine
  2. [Flash the image](https://www.raspberrypi.org/documentation/installation/installing-images/README.md) using Etcher
     * Note: You don't have to unzip the image to use Etcher. Just drag and drop the zip file into Etcher
@@ -49,30 +51,30 @@ The author is using a Raspberry Pi Zero W without the desktop for documentation 
  11. Login via SSH:
      * Username: pi
      * Password: «Your new password»
- 12. Install YottaDB (backend & frontend)
+ 12. Install YottaDB
      * Type: `curl -fsSL https://raw.githubusercontent.com/YottaDB/YottaDB/master/sr_unix/ydbinstall.sh -o ydbinstall`
      * Type: `chmod +x ydbinstall`
      * Type: `sudo ./ydbinstall --utf8 default`
      * Type: `sudo ln -s $(ls -1 /usr/local/lib/yottadb) /usr/local/lib/yottadb/current`
      * Type: `sudo ln -s /usr/local/lib/yottadb/current/libyottadb.so /usr/local/lib`
      * Type: `sudo ldconfig`
- 13. Retrieve MindWave demo source code (backend & frontend)
+ 13. Retrieve MindWave demo source code
      * Type: `sudo apt-get install git -y`
      * Type: `mkdir -p ~/Projects`
      * Type: `cd Projects`
      * Type: `git clone https://github.com/YottaDB/YottaDBDemos.git`
- 14. Install node.js (backend & frontend)
+ 14. Install node.js
      * Type: `curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash`
      * Type: `export NVM_DIR="$HOME/.nvm"`
      * Type: `source "$NVM_DIR/nvm.sh"`
      * Type: `nvm install --lts`
- 15. Setup MindWave IoT database (backend)
+ 15. Setup MindWave IoT database
      * Type: `cd ~/Projects/YottaDBDemos/mindwave/backend`
      * Type: `source ydbenv`
      * Type: `npm install`
      * Type: `mumps -run GDE < gde`
      * Type: `mupip create`
- 16. Pair MindWave device (backend)
+ 16. Pair MindWave device
      * Type: `sudo bluetoothctl`
      * Type: `agent on`
      * Type: `default-agent`
@@ -84,41 +86,66 @@ The author is using a Raspberry Pi Zero W without the desktop for documentation 
      * Type: `pair «your MindWave MAC address»`
      * Type: `exit`
      * Type: `sudo rfcomm bind /dev/rfcomm0 «your MindWave MAC address» 1`
- 17. Install & Start the MindWave process (backend)
+ 17. Install & Start the MindWave process
      * Type: `cd ~/Projects/YottaDBDemos/mindwave/backend`
      * Type: `node index.js`
- 18. Install QEWD (frontend)
+
+Frontend Installation:
+
+ 1. Install YottaDB
+     * Type: `curl -fsSL https://raw.githubusercontent.com/YottaDB/YottaDB/master/sr_unix/ydbinstall.sh -o ydbinstall`
+     * Type: `chmod +x ydbinstall`
+     * Type: `sudo ./ydbinstall --utf8 default`
+     * Type: `sudo ln -s $(ls -1 /usr/local/lib/yottadb) /usr/local/lib/yottadb/current`
+     * Type: `sudo ln -s /usr/local/lib/yottadb/current/libyottadb.so /usr/local/lib`
+     * Type: `sudo ldconfig`
+ 2. Retrieve MindWave demo source code
+     * Type: `sudo apt-get install git -y`
+     * Type: `mkdir -p ~/Projects`
+     * Type: `cd Projects`
+     * Type: `git clone https://github.com/YottaDB/YottaDBDemos.git`
+ 3. Install node.js
+     * Type: `curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash`
+     * Type: `export NVM_DIR="$HOME/.nvm"`
+     * Type: `source "$NVM_DIR/nvm.sh"`
+     * Type: `nvm install --lts`
+ 4. Install QEWD
      * Note: This can be done on either the same machine or a different one depending on your configuration
      * Type: `cd ~/Projects/YottaDBDemos/mindwave/frontend`
+     * Type: `source ydbenv`
      * Type: `npm install`
      * Type: `cp node_modules/qewd-monitor/www/{bundle.js,*.html,*.css} www/qewd-monitor`
      * Type: `cp node_modules/ewd-client/lib/proto/ewd-client.js www`
- 19. Setup MindWave IoT database (frontend)
+ 5. Setup MindWave IoT database
      * Type: `cd ~/Projects/YottaDBDemos/mindwave/frontend`
      * Type: `source ydbenv`
      * Type: `mumps -run GDE < gde`
      * Type: `mupip create`
- 20. Start QEWD
+ 6. Start QEWD
      * Type: `cd ~/Projects/YottaDBDemos/mindwave/frontend`
      * Type: `node qewd-ydb.js`
      * Make sure that the QEWD-Monitor application and API calls return no errors:
-       * In a web browser open: «your Pi Zero IP address»:8080/qewd-monitor/ Password: keepThisSecret! You should be able to login to the application successfully
-       * In a web browser open: «your Pi Zero IP address»:8080/api/db/MindWave/list You should see "No MindWave Documents exist".
- 20. Run full application
-     In one terminal window (backend):
-     * Turn on and put on the MindWave device
-     * Type: `sudo rfcomm bind /dev/rfcomm0 «your MindWave MAC address» 1`
-     * Type: `cd ~/Projects/YottaDBDemos/mindwave/backend`
-     * Type: `source ydbenv`
-     * Type: `./replication_start`
-     * Type: `node index.js`
+       * In a web browser open: localhost:8080/qewd-monitor/ Password: keepThisSecret! You should be able to login to the application successfully
+       * In a web browser open: localhost:8080/api/db/MindWave/list You should see "No MindWave Documents exist".
 
-     In another terminal window (frontend):
-     * Type: `cd ~/Projects/YottaDBDemos/mindwave/frontend`
-     * Type: `source ydbenv`
-     * Type: `./replication_start`
-     * Type: `node qewd-ydb.js`
-     Open http://«your Pi Zero IP address»:8080/mindwave/ in your web browser
+ Note: Manual changes to the frontend replication start may be necessary to set the IP address of the laptop or set to 127.0.0.1 if it is a self contained demo.
+
+Run full application:
+ In one terminal window (Pi Zero):
+   * Turn on and put on the MindWave device
+   * Type: `sudo rfcomm bind /dev/rfcomm0 «your MindWave MAC address» 1`
+   * Type: `cd ~/Projects/YottaDBDemos/mindwave/backend`
+   * Type: `source ydbenv`
+   * Type: `./replication_start`
+   * Type: `node index.js`
+
+ In another terminal window (Laptop or Pi Zero):
+   * Type: `cd ~/Projects/YottaDBDemos/mindwave/frontend`
+   * Type: `source ydbenv`
+   * Type: `./replication_start`
+   * Type: `node qewd-ydb.js`
+   Open http://localhost:8080/mindwave/ in your web browser
+
 
 # Self Contained Demo
 
@@ -169,3 +196,16 @@ This requires the normal rapbian image with a gui vs stretch lite.
     * Comment out with a `#` `interface wlan0`
     * Comment out with a `#` `static ip_address=192.168.4.1/24`
   * Reboot the raspberry pi `sudo reboot`
+
+ To convert a standalone installation to a split installation:
+
+  * Remove the following from `/home/pi/.config/lxsession/LXDE-pi/autostart`
+   ```
+   @chromium-browser --kiosk http://localhost:8080/mindwave/chernoff.html
+   ```
+  * Remove the following from `/etc/rc.local`
+   ```
+   # Start mindwave backend
+   cd /home/pi/Projects/YottaDBDemos/mindwave/backend/
+   su pi -c ./mindwave_start
+   ```

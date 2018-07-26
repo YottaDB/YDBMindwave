@@ -1,3 +1,7 @@
+# Project Moved to Gitlab
+
+This project has moved to Gitlab and can be found at https://gitlab.com/YottaDB/Demo/YDBMindWave – the GitHub project is only for historical interest.
+
 # YottaDB Demos
 
 All software in this package is part of YottaDB (http://yottadb.com) each
